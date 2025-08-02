@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Endpoints CRUD Test - Health Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #e5e7eb; border-radius: 8px; }
+        .test-button { margin: 5px; padding: 10px 15px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; }
+        .test-button:hover { background: #2563eb; }
+        .test-button:disabled { background: #9ca3af; cursor: not-allowed; }
+        .result { margin: 10px 0; padding: 10px; border-radius: 6px; }
+        .error { background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; }
+        .success { background: #f0fdf4; border: 1px solid #bbf7d0; color: #16a34a; }
+        .info { background: #eff6ff; border: 1px solid #bfdbfe; color: #2563eb; }
+        .warning { background: #fffbeb; border: 1px solid #fed7aa; color: #d97706; }
+        .endpoint { background: #f8fafc; border: 1px solid #e2e8f0; padding: 8px; margin: 5px 0; border-radius: 4px; font-family: monospace; }
+        .method { display: inline-block; padding: 2px 6px; border-radius: 3px; font-size: 12px; font-weight: bold; }
+        .method.get { background: #10b981; color: white; }
+        .method.post { background: #3b82f6; color: white; }
+        .method.put { background: #f59e0b; color: white; }
+        .method.delete { background: #ef4444; color: white; }
+    </style>
+</head>
+<body class="bg-gray-50 p-8">
+    <div class="max-w-7xl mx-auto">
+        <h1 class="text-3xl font-bold mb-6 text-center text-gray-800">API Endpoints CRUD Test - Health Tracker</h1>
+        
+        <!-- Test Status -->
+        <div class="test-section bg-white">
+            <h2 class="text-xl font-semibold mb-4">Test Status</h2>
+            <div id="testStatus" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="p-3 bg-blue-50 border border-blue-200 rounded">
+                    <div class="font-medium">Backend Status</div>
+                    <div id="backendStatus" class="text-sm">Checking...</div>
+                </div>
+                <div class="p-3 bg-green-50 border border-green-200 rounded">
+                    <div class="font-medium">Authentication</div>
+                    <div id="authStatus" class="text-sm">Not tested</div>
+                </div>
+                <div class="p-3 bg-yellow-50 border border-yellow-200 rounded">
+                    <div class="font-medium">User Endpoints</div>
+                    <div id="userStatus" class="text-sm">Not tested</div>
+                </div>
+                <div class="p-3 bg-purple-50 border border-purple-200 rounded">
+                    <div class="font-medium">Health Records</div>
+                    <div id="recordsStatus" class="text-sm">Not tested</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Test Controls -->
+        <div class="test-section bg-white">
+            <h2 class="text-xl font-semibold mb-4">Test Controls</h2>
+            <div class="flex flex-wrap gap-2">
+                <button onclick="testBackendHealth()" class="test-button">Test Backend Health</button>
+                <button onclick="testAuthenticationEndpoints()" class="test-button">Test Authentication</button>
+                <button onclick="testUserEndpoints()" class="test-button">Test User Endpoints</button>
+                <button onclick="testHealthRecordEndpoints()" class="test-button">Test Health Records</button>
+                <button onclick="testErrorHandling()" class="test-button">Test Error Handling</button>
+                <button onclick="testValidation()" class="test-button">Test Validation</button>
+                        <button onclick="runAllEndpointTests()" class="test-button bg-green-600 hover:bg-green-700">Run All Endpoint Tests</button>
+        <button onclick="generateReport()" class="test-button bg-purple-600 hover:bg-purple-700">Generate Report</button>
+        <button onclick="clearResults()" class="test-button bg-gray-600 hover:bg-gray-700">Clear Results</button>
+            </div>
+        </div>
+
+        <!-- Endpoints Overview -->
+        <div class="test-section bg-white">
+            <h2 class="text-xl font-semibold mb-4">API Endpoints Overview</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <h3 class="font-medium mb-2">Authentication Endpoints</h3>
+                    <div class="endpoint">
+                        <span class="method post">POST</span> /api/auth/register
+                    </div>
+                    <div class="endpoint">
+                        <span class="method post">POST</span> /api/auth/login
+                    </div>
+                </div>
+                <div>
+                    <h3 class="font-medium mb-2">User Endpoints</h3>
+                    <div class="endpoint">
+                        <span class="method get">GET</span> /api/users/profile
+                    </div>
+                    <div class="endpoint">
+                        <span class="method put">PUT</span> /api/users/profile
+                    </div>
+                    <div class="endpoint">
+                        <span class="method get">GET</span> /api/users/stats
+                    </div>
+                </div>
+                <div>
+                    <h3 class="font-medium mb-2">Health Records Endpoints</h3>
+                    <div class="endpoint">
+                        <span class="method get">GET</span> /api/health-records
+                    </div>
+                    <div class="endpoint">
+                        <span class="method post">POST</span> /api/health-records
+                    </div>
+                    <div class="endpoint">
+                        <span class="method get">GET</span> /api/health-records/:id
+                    </div>
+                    <div class="endpoint">
+                        <span class="method put">PUT</span> /api/health-records/:id
+                    </div>
+                    <div class="endpoint">
+                        <span class="method delete">DELETE</span> /api/health-records/:id
+                    </div>
+                    <div class="endpoint">
+                        <span class="method get">GET</span> /api/health-records/stats/summary
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Test Results -->
+        <div class="test-section bg-white">
+            <h2 class="text-xl font-semibold mb-4">Test Results</h2>
+            <div id="testResults" class="space-y-4 max-h-96 overflow-y-auto"></div>
+        </div>
+
+        <!-- Test Data -->
+        <div class="test-section bg-white">
+            <h2 class="text-xl font-semibold mb-4">Test Data</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <h3 class="font-medium mb-2">Test User Data</h3>
+                    <div id="userData" class="text-sm bg-gray-50 p-3 rounded"></div>
+                </div>
+                <div>
+                    <h3 class="font-medium mb-2">Test Health Record Data</h3>
+                    <div id="recordData" class="text-sm bg-gray-50 p-3 rounded"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let authToken = null;
+        let testUserId = null;
+        let testRecordId = null;
+        let testResults = [];
+        let testStartTime = null;
+        let testEndTime = null;
+        let testUserData = {
+            email: `test_${Date.now()}@healthtracker.com`,
+            name: 'Test User',
+            password: 'TestPassword123!'
+        };
+        let testRecordData = {
+            date: new Date().toISOString().split('T')[0],
+            weight: 75.5,
+            height: 180,
+            age: 30,
+            body_fat_percentage: 15.2,
+            body_fat_kg: 11.5,
+            muscle_mass: 60.0,
+            bone_mass: 3.2,
+            bmi: 23.3,
+            kcal: 2500,
+            metabolic_age: 28,
+            water_percentage: 65.0,
+            visceral_fat: 5,
+            fat_right_arm: 2.5,
+            fat_left_arm: 2.5,
+            fat_right_leg: 4.0,
+            fat_left_leg: 4.0,
+            fat_trunk: 8.0
+        };
+
+        // API Base URL
+        const API_BASE = 'http://localhost:3000/api';
+
+        // Utility functions
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const resultsDiv = document.getElementById('testResults');
+            const logDiv = document.createElement('div');
+            logDiv.className = `result ${type}`;
+            logDiv.innerHTML = `<strong>${timestamp}</strong>: ${message}`;
+            resultsDiv.appendChild(logDiv);
+            resultsDiv.scrollTop = resultsDiv.scrollHeight;
+            
+            // Store result for report
+            testResults.push({
+                timestamp,
+                message,
+                type,
+                status: type === 'success' ? 'PASS' : type === 'error' ? 'FAIL' : 'INFO'
+            });
+        }
+
+        function updateStatus(elementId, status, color = 'blue') {
+            const element = document.getElementById(elementId);
+            element.textContent = status;
+            element.className = `text-sm text-${color}-600`;
+        }
+
+        function updateTestData() {
+            document.getElementById('userData').textContent = JSON.stringify(testUserData, null, 2);
+            document.getElementById('recordData').textContent = JSON.stringify(testRecordData, null, 2);
+        }
+
+        async function makeRequest(endpoint, options = {}) {
+            const url = `${API_BASE}${endpoint}`;
+            const defaultOptions = {
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(authToken && { 'Authorization': `Bearer ${authToken}` })
+                }
+            };
+            
+            const response = await fetch(url, { ...defaultOptions, ...options });
+            const data = await response.json();
+            
+            return {
+                ok: response.ok,
+                status: response.status,
+                data,
+                headers: response.headers
+            };
+        }
+
+        // Test functions
+        async function testBackendHealth() {
+            log('Testing backend health endpoint...', 'info');
+            try {
+                const response = await makeRequest('/health');
+                
+                if (response.ok) {
+                    log('✅ Backend health check successful', 'success');
+                    updateStatus('backendStatus', 'Online', 'green');
+                } else {
+                    log(`❌ Backend health check failed: ${response.status}`, 'error');
+                    updateStatus('backendStatus', 'Offline', 'red');
+                }
+            } catch (error) {
+                log(`❌ Backend connection error: ${error.message}`, 'error');
+                updateStatus('backendStatus', 'Connection Failed', 'red');
+            }
+        }
+
+        async function testAuthenticationEndpoints() {
+            log('Testing authentication endpoints...', 'info');
+            
+            // Test registration
+            try {
+                log('Testing user registration...', 'info');
+                const registerResponse = await makeRequest('/auth/register', {
+                    method: 'POST',
+                    body: JSON.stringify(testUserData)
+                });
+                
+                if (registerResponse.ok) {
+                    log('✅ User registration successful', 'success');
+                    testUserId = registerResponse.data.user.id;
+                } else {
+                    log(`❌ Registration failed: ${registerResponse.data.error}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Registration error: ${error.message}`, 'error');
+            }
+
+            // Test login
+            try {
+                log('Testing user login...', 'info');
+                const loginResponse = await makeRequest('/auth/login', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        email: testUserData.email,
+                        password: testUserData.password
+                    })
+                });
+                
+                if (loginResponse.ok) {
+                    authToken = loginResponse.data.token;
+                    log('✅ User login successful', 'success');
+                    log(`Token received: ${authToken.substring(0, 20)}...`, 'info');
+                    updateStatus('authStatus', 'Authenticated', 'green');
+                } else {
+                    log(`❌ Login failed: ${loginResponse.data.error}`, 'error');
+                    updateStatus('authStatus', 'Failed', 'red');
+                }
+            } catch (error) {
+                log(`❌ Login error: ${error.message}`, 'error');
+                updateStatus('authStatus', 'Error', 'red');
+            }
+        }
+
+        async function testUserEndpoints() {
+            if (!authToken) {
+                log('❌ Authentication required for user endpoints', 'error');
+                return;
+            }
+
+            log('Testing user endpoints...', 'info');
+
+            // Test GET /users/profile
+            try {
+                log('Testing GET /users/profile...', 'info');
+                const profileResponse = await makeRequest('/users/profile');
+                
+                if (profileResponse.ok) {
+                    log('✅ Get user profile successful', 'success');
+                    log(`User: ${profileResponse.data.user.name} (${profileResponse.data.user.email})`, 'info');
+                } else {
+                    log(`❌ Get profile failed: ${profileResponse.data.error}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Get profile error: ${error.message}`, 'error');
+            }
+
+            // Test PUT /users/profile
+            try {
+                log('Testing PUT /users/profile...', 'info');
+                const newName = `Updated Test User ${Date.now()}`;
+                const updateResponse = await makeRequest('/users/profile', {
+                    method: 'PUT',
+                    body: JSON.stringify({ name: newName })
+                });
+                
+                if (updateResponse.ok) {
+                    log('✅ Update user profile successful', 'success');
+                    log(`Updated name: ${updateResponse.data.user.name}`, 'info');
+                } else {
+                    log(`❌ Update profile failed: ${updateResponse.data.error}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Update profile error: ${error.message}`, 'error');
+            }
+
+            // Test GET /users/stats
+            try {
+                log('Testing GET /users/stats...', 'info');
+                const statsResponse = await makeRequest('/users/stats');
+                
+                if (statsResponse.ok) {
+                    log('✅ Get user stats successful', 'success');
+                    log(`Stats: ${statsResponse.data.stats.total_records || 0} records`, 'info');
+                } else {
+                    log(`❌ Get stats failed: ${statsResponse.data.error}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Get stats error: ${error.message}`, 'error');
+            }
+
+            updateStatus('userStatus', 'Tested', 'green');
+        }
+
+        async function testHealthRecordEndpoints() {
+            if (!authToken) {
+                log('❌ Authentication required for health record endpoints', 'error');
+                return;
+            }
+
+            log('Testing health record endpoints...', 'info');
+
+            // Test POST /health-records (Create)
+            try {
+                log('Testing POST /health-records (Create)...', 'info');
+                const createResponse = await makeRequest('/health-records', {
+                    method: 'POST',
+                    body: JSON.stringify(testRecordData)
+                });
+                
+                if (createResponse.ok) {
+                    testRecordId = createResponse.data.record.id;
+                    log('✅ Create health record successful', 'success');
+                    log(`Record ID: ${testRecordId}`, 'info');
+                } else {
+                    log(`❌ Create record failed: ${createResponse.data.error}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Create record error: ${error.message}`, 'error');
+            }
+
+            // Test GET /health-records (Read All)
+            try {
+                log('Testing GET /health-records (Read All)...', 'info');
+                const getAllResponse = await makeRequest('/health-records');
+                
+                if (getAllResponse.ok) {
+                    log(`✅ Get all records successful: ${getAllResponse.data.records.length} records`, 'success');
+                } else {
+                    log(`❌ Get all records failed: ${getAllResponse.data.error}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Get all records error: ${error.message}`, 'error');
+            }
+
+            // Test GET /health-records/:id (Read One)
+            if (testRecordId) {
+                try {
+                    log(`Testing GET /health-records/${testRecordId} (Read One)...`, 'info');
+                    const getOneResponse = await makeRequest(`/health-records/${testRecordId}`);
+                    
+                    if (getOneResponse.ok) {
+                        log('✅ Get single record successful', 'success');
+                        log(`Record weight: ${getOneResponse.data.record.weight}kg`, 'info');
+                    } else {
+                        log(`❌ Get single record failed: ${getOneResponse.data.error}`, 'error');
+                    }
+                } catch (error) {
+                    log(`❌ Get single record error: ${error.message}`, 'error');
+                }
+            }
+
+            // Test PUT /health-records/:id (Update)
+            if (testRecordId) {
+                try {
+                    log(`Testing PUT /health-records/${testRecordId} (Update)...`, 'info');
+                    const updateData = { ...testRecordData, weight: 76.0, bmi: 23.5 };
+                    const updateResponse = await makeRequest(`/health-records/${testRecordId}`, {
+                        method: 'PUT',
+                        body: JSON.stringify(updateData)
+                    });
+                    
+                    if (updateResponse.ok) {
+                        log('✅ Update record successful', 'success');
+                        log(`Updated weight: ${updateResponse.data.record.weight}kg`, 'info');
+                    } else {
+                        log(`❌ Update record failed: ${updateResponse.data.error}`, 'error');
+                    }
+                } catch (error) {
+                    log(`❌ Update record error: ${error.message}`, 'error');
+                }
+            }
+
+            // Test GET /health-records/stats/summary
+            try {
+                log('Testing GET /health-records/stats/summary...', 'info');
+                const statsResponse = await makeRequest('/health-records/stats/summary');
+                
+                if (statsResponse.ok) {
+                    log('✅ Get health stats successful', 'success');
+                    log(`Stats: ${statsResponse.data.stats.total_records || 0} total records`, 'info');
+                } else {
+                    log(`❌ Get health stats failed: ${statsResponse.data.error}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Get health stats error: ${error.message}`, 'error');
+            }
+
+            // Test DELETE /health-records/:id (Delete)
+            if (testRecordId) {
+                try {
+                    log(`Testing DELETE /health-records/${testRecordId} (Delete)...`, 'info');
+                    const deleteResponse = await makeRequest(`/health-records/${testRecordId}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    if (deleteResponse.ok) {
+                        log('✅ Delete record successful', 'success');
+                        testRecordId = null;
+                    } else {
+                        log(`❌ Delete record failed: ${deleteResponse.data.error}`, 'error');
+                    }
+                } catch (error) {
+                    log(`❌ Delete record error: ${error.message}`, 'error');
+                }
+            }
+
+            updateStatus('recordsStatus', 'Tested', 'green');
+        }
+
+        async function testErrorHandling() {
+            log('Testing error handling...', 'info');
+
+            // Test invalid authentication
+            try {
+                log('Testing invalid authentication...', 'info');
+                const invalidAuthResponse = await makeRequest('/users/profile', {
+                    headers: { 'Authorization': 'Bearer invalid_token' }
+                });
+                
+                if (!invalidAuthResponse.ok && invalidAuthResponse.status === 403) {
+                    log('✅ Invalid authentication properly rejected', 'success');
+                } else {
+                    log('❌ Invalid authentication not properly handled', 'error');
+                }
+            } catch (error) {
+                log(`❌ Invalid auth test error: ${error.message}`, 'error');
+            }
+
+            // Test missing authentication
+            try {
+                log('Testing missing authentication...', 'info');
+                const noAuthResponse = await makeRequest('/users/profile', {
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                if (!noAuthResponse.ok && noAuthResponse.status === 401) {
+                    log('✅ Missing authentication properly rejected', 'success');
+                } else {
+                    log('❌ Missing authentication not properly handled', 'error');
+                }
+            } catch (error) {
+                log(`❌ Missing auth test error: ${error.message}`, 'error');
+            }
+
+            // Test invalid record ID
+            if (authToken) {
+                try {
+                    log('Testing invalid record ID...', 'info');
+                    const invalidIdResponse = await makeRequest('/health-records/999999', {
+                        headers: { 'Authorization': `Bearer ${authToken}` }
+                    });
+                    
+                    if (!invalidIdResponse.ok && invalidIdResponse.status === 404) {
+                        log('✅ Invalid record ID properly rejected', 'success');
+                    } else {
+                        log('❌ Invalid record ID not properly handled', 'error');
+                    }
+                } catch (error) {
+                    log(`❌ Invalid ID test error: ${error.message}`, 'error');
+                }
+            }
+        }
+
+        async function testValidation() {
+            log('Testing data validation...', 'info');
+
+            if (!authToken) {
+                log('❌ Authentication required for validation tests', 'error');
+                return;
+            }
+
+            // Test invalid health record data
+            const invalidRecordData = {
+                ...testRecordData,
+                weight: -5,
+                height: 0,
+                age: 150,
+                body_fat_percentage: 150
+            };
+
+            try {
+                log('Testing invalid health record data...', 'info');
+                const invalidResponse = await makeRequest('/health-records', {
+                    method: 'POST',
+                    body: JSON.stringify(invalidRecordData)
+                });
+                
+                if (!invalidResponse.ok && invalidResponse.status === 400) {
+                    log('✅ Invalid data properly rejected', 'success');
+                    log(`Validation error: ${invalidResponse.data.error}`, 'info');
+                } else {
+                    log('❌ Invalid data not properly validated', 'error');
+                }
+            } catch (error) {
+                log(`❌ Validation test error: ${error.message}`, 'error');
+            }
+
+            // Test duplicate date
+            try {
+                log('Testing duplicate date validation...', 'info');
+                const duplicateResponse = await makeRequest('/health-records', {
+                    method: 'POST',
+                    body: JSON.stringify(testRecordData)
+                });
+                
+                if (!duplicateResponse.ok && duplicateResponse.status === 409) {
+                    log('✅ Duplicate date properly rejected', 'success');
+                } else {
+                    log('❌ Duplicate date not properly handled', 'error');
+                }
+            } catch (error) {
+                log(`❌ Duplicate date test error: ${error.message}`, 'error');
+            }
+        }
+
+        async function runAllEndpointTests() {
+            testStartTime = new Date();
+            testResults = [];
+            
+            log('🚀 Starting comprehensive API endpoint test suite...', 'info');
+            
+            // Reset status
+            updateStatus('backendStatus', 'Testing...', 'yellow');
+            updateStatus('authStatus', 'Testing...', 'yellow');
+            updateStatus('userStatus', 'Testing...', 'yellow');
+            updateStatus('recordsStatus', 'Testing...', 'yellow');
+            
+            // Run tests in sequence
+            await testBackendHealth();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            await testAuthenticationEndpoints();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            await testUserEndpoints();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            await testHealthRecordEndpoints();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            await testErrorHandling();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            await testValidation();
+            
+            testEndTime = new Date();
+            log('🎉 All API endpoint tests completed!', 'success');
+            
+            // Auto-generate report
+            setTimeout(() => generateReport(), 1000);
+        }
+
+        function generateReport() {
+            if (testResults.length === 0) {
+                log('❌ No test results available for report generation', 'error');
+                return;
+            }
+
+            const duration = testEndTime ? Math.round((testEndTime - testStartTime) / 1000) : 0;
+            const passCount = testResults.filter(r => r.status === 'PASS').length;
+            const failCount = testResults.filter(r => r.status === 'FAIL').length;
+            const infoCount = testResults.filter(r => r.status === 'INFO').length;
+            const totalTests = passCount + failCount;
+
+            const report = `HEALTH TRACKER API ENDPOINTS TEST REPORT
+================================================================
+
+Test Execution Summary:
+- Test Start Time: ${testStartTime ? testStartTime.toLocaleString() : 'N/A'}
+- Test End Time: ${testEndTime ? testEndTime.toLocaleString() : 'N/A'}
+- Total Duration: ${duration} seconds
+- Total Tests: ${totalTests}
+- Passed: ${passCount}
+- Failed: ${failCount}
+- Info Messages: ${infoCount}
+- Success Rate: ${totalTests > 0 ? Math.round((passCount / totalTests) * 100) : 0}%
+
+Test Environment:
+- Backend URL: ${API_BASE}
+- Test User: ${testUserData.email}
+- Test Record ID: ${testRecordId || 'N/A'}
+
+Detailed Test Results:
+${testResults.map(result => `[${result.timestamp}] [${result.status}] ${result.message}`).join('\n')}
+
+API Endpoints Tested:
+- Authentication: /api/auth/register, /api/auth/login
+- User Management: /api/users/profile (GET/PUT), /api/users/stats
+- Health Records: /api/health-records (GET/POST/PUT/DELETE), /api/health-records/stats/summary
+- System Health: /api/health
+
+Test Data Used:
+- User Data: ${JSON.stringify(testUserData, null, 2)}
+- Health Record Data: ${JSON.stringify(testRecordData, null, 2)}
+
+Status Summary:
+- Backend Status: ${document.getElementById('backendStatus').textContent}
+- Authentication Status: ${document.getElementById('authStatus').textContent}
+- User Endpoints Status: ${document.getElementById('userStatus').textContent}
+- Health Records Status: ${document.getElementById('recordsStatus').textContent}
+
+Recommendations:
+${failCount > 0 ? '- Review failed tests and fix identified issues' : '- All tests passed successfully'}
+${passCount > 0 ? '- API endpoints are functioning correctly' : '- No successful tests recorded'}
+
+Report Generated: ${new Date().toLocaleString()}
+================================================================`;
+
+            // Create and save the report
+            const blob = new Blob([report], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `health-tracker-api-test-report-${new Date().toISOString().split('T')[0]}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            // Also save to reports directory via server
+            try {
+                const formData = new FormData();
+                formData.append('report', blob, `health-tracker-api-test-report-${new Date().toISOString().split('T')[0]}.txt`);
+                
+                fetch('/save-report', {
+                    method: 'POST',
+                    body: formData
+                }).then(response => {
+                    if (response.ok) {
+                        log('📄 API test report saved to reports directory successfully', 'success');
+                    } else {
+                        log('⚠️ Report downloaded but could not save to reports directory', 'warning');
+                    }
+                }).catch(error => {
+                    log('⚠️ Report downloaded but server save failed: ' + error.message, 'warning');
+                });
+            } catch (error) {
+                log('⚠️ Report downloaded but server save failed: ' + error.message, 'warning');
+            }
+
+            log('📄 Test report generated and downloaded successfully', 'success');
+        }
+
+        function clearResults() {
+            document.getElementById('testResults').innerHTML = '';
+            testResults = [];
+            log('Results cleared', 'info');
+        }
+
+        // Initialize
+        window.onload = function() {
+            updateTestData();
+            testBackendHealth();
+        };
+    </script>
+</body>
+</html> 

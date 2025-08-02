@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clean App Test - Health Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="src/css/styles.css">
+</head>
+<body class="text-gray-800">
+
+    <div id="loading-indicator" class="flex justify-center items-center h-screen">
+        <div class="text-center">
+            <svg class="animate-spin h-10 w-10 text-blue-500 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+            <p class="mt-2 text-lg">A carregar a sua aplicação de saúde...</p>
+        </div>
+    </div>
+
+    <div id="main-content" class="container mx-auto p-4 md:p-6 hidden">
+        <!-- Authentication Area -->
+        <div id="auth-area" class="hidden">
+            <!-- This should be hidden -->
+        </div>
+
+        <!-- Main App Area -->
+        <div id="app-area">
+        <header class="text-center mb-8 relative">
+            <h1 class="text-3xl md:text-4xl font-bold text-blue-600">Health Tracker v4</h1>
+            <p class="text-md md:text-lg text-gray-600 mt-2">O seu diário de saúde, agora otimizado</p>
+            <p id="user-id-display" class="text-xs md:text-sm text-gray-500 mt-2 break-all px-2">Test User - Clean App Test</p>
+            
+            <!-- User dropdown menu should be here -->
+            <div id="user-dropdown-container"></div>
+        </header>
+
+        <section class="mb-12 bg-white p-4 md:p-8 rounded-xl shadow-lg">
+            <h2 class="text-xl md:text-2xl font-bold mb-6">Adicionar Novo Registro</h2>
+            <!-- Formulário otimizado para telemóvel -->
+            <form id="health-form" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="col-span-1 sm:col-span-2 lg:col-span-1"><label class="block text-sm font-medium">Data</label><input type="date" id="date" name="date" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></div>
+                <div class="col-span-1"><label class="block text-sm font-medium">Peso (kg)</label><input type="number" step="0.1" name="weight" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></div>
+                <div class="col-span-1"><label class="block text-sm font-medium">Altura (cm)</label><input type="number" name="height" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></div>
+                <div class="col-span-1"><label class="block text-sm font-medium">Idade</label><input type="number" name="age" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></div>
+                <div class="col-span-1"><label class="block text-sm font-medium">Massa Gorda (%)</label><input type="number" step="0.1" name="bodyFatPercentage" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></div>
+                <div class="col-span-1"><label class="block text-sm font-medium">Massa Gorda (kg)</label><input type="number" step="0.1" name="bodyFatKg" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></div>
+                <div class="col-span-1"><label class="block text-sm font-medium">Massa Muscular (kg)</label><input type="number" step="0.1" name="muscleMass" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></div>
+                <div class="col-span-1"><label class="block text-sm font-medium">Massa Óssea (kg)</label><input type="number" step="0.1" name="boneMass" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></div>
+                <div class="col-span-1"><label class="block text-sm font-medium">Índ. Massa Corp.</label><input type="number" step="0.1" name="bmi" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></div>
+                <div class="col-span-1"><label class="block text-sm font-medium">Disp. Calórico (Kcal)</label><input type="number" name="kcal" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></div>
+                <div class="col-span-1"><label class="block text-sm font-medium">Idade Metabólica</label><input type="number" name="metabolicAge" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></div>
+                <div class="col-span-1"><label class="block text-sm font-medium">Água (%)</label><input type="number" step="0.1" name="waterPercentage" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></div>
+                <div class="col-span-1"><label class="block text-sm font-medium">Gordura Visceral</label><input type="number" name="visceralFat" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></div>
+                <div class="col-span-1 sm:col-span-2 lg:col-span-4 mt-4"><button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-300 shadow-md">Salvar Registro</button></div>
+            </form>
+        </section>
+
+        <section id="suggestions-section" class="mb-12"><h2 class="text-xl md:text-2xl font-bold mb-4">Sugestões para Melhorar</h2><div id="suggestions-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div></section>
+        <section id="charts-section" class="mb-12"><h2 class="text-xl md:text-2xl font-bold mb-6 text-center">Seu Progresso Visual</h2><div class="grid grid-cols-1 lg:grid-cols-2 gap-8"><div class="bg-white p-4 md:p-6 rounded-xl shadow-lg"><div class="chart-container"><canvas id="weightBmiChart"></canvas></div></div><div class="bg-white p-4 md:p-6 rounded-xl shadow-lg"><div class="chart-container"><canvas id="compositionChart"></canvas></div></div><div class="bg-white p-4 md:p-6 rounded-xl shadow-lg lg:col-span-2"><div class="chart-container max-w-xl mx-auto"><canvas id="fatDistributionChart"></canvas></div></div></div></section>
+        <section id="history-section"><h2 class="text-xl md:text-2xl font-bold mb-4">Histórico de Registros</h2><div class="overflow-x-auto"><table class="w-full text-sm text-left text-gray-500"><thead class="text-xs text-gray-700 uppercase bg-gray-50 hidden md:table-header-group"><tr><th scope="col" class="py-3 px-4">Data</th><th scope="col" class="py-3 px-4">Peso</th><th scope="col" class="py-3 px-4">% Gordura</th><th scope="col" class="py-3 px-4">Massa Muscular</th><th scope="col" class="py-3 px-4">IMC</th><th scope="col" class="py-3 px-4">Gordura Visceral</th><th scope="col" class="py-3 px-4">% Água</th><th scope="col" class="py-3 px-4">Idade Metabólica</th><th scope="col" class="py-3 px-4 text-center">Ações</th></tr></thead><tbody id="history-table-body"></tbody></table></div></section>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmação -->
+    <div id="confirm-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 h-full w-full hidden z-50 flex items-center justify-center p-4">
+        <div class="p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
+            <div class="text-center">
+                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100"><svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg></div>
+                <h3 class="text-lg leading-6 font-medium text-gray-900">Eliminar Registo?</h3>
+                <div class="mt-2 px-7 py-3"><p class="text-sm text-gray-500">Tem a certeza? Esta ação não pode ser desfeita.</p></div>
+                <div class="items-center px-4 py-3">
+                    <button id="modal-confirm-btn" class="px-4 py-2 bg-red-500 text-white text-base font-medium rounded-md w-auto shadow-sm hover:bg-red-700">Eliminar</button>
+                    <button id="modal-cancel-btn" class="px-4 py-2 bg-gray-200 text-gray-800 text-base font-medium rounded-md w-auto shadow-sm hover:bg-gray-300 ml-2">Cancelar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notificação Toast -->
+    <div id="toast-notification" class="fixed bottom-5 right-5 text-white py-2 px-4 rounded-lg shadow-lg hidden">
+        <p id="toast-message"></p>
+    </div>
+
+    <script type="module">
+        // Test the clean app interface
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('Clean app test - DOM loaded');
+            
+            // Hide loading indicator
+            const loadingIndicator = document.getElementById('loading-indicator');
+            const mainContent = document.getElementById('main-content');
+            
+            if (loadingIndicator) {
+                loadingIndicator.classList.add('hidden');
+                console.log('Loading indicator hidden');
+            }
+            if (mainContent) {
+                mainContent.classList.remove('hidden');
+                console.log('Main content shown');
+            }
+            
+            // Set current date
+            const dateInput = document.getElementById('date');
+            if (dateInput) {
+                dateInput.value = new Date().toISOString().split('T')[0];
+                console.log('Date input set');
+            }
+            
+            // Test adding dropdown menu
+            try {
+                const { AuthComponents } = await import('./src/components/authComponents.js');
+                
+                const testUser = {
+                    name: 'Test User',
+                    email: 'test@example.com',
+                    id: 'test-user-1'
+                };
+                
+                const dropdownHTML = AuthComponents.createUserProfile(
+                    testUser,
+                    () => console.log('Logout clicked'),
+                    () => console.log('Edit profile clicked')
+                );
+                
+                const dropdownContainer = document.getElementById('user-dropdown-container');
+                if (dropdownContainer) {
+                    dropdownContainer.innerHTML = dropdownHTML;
+                    console.log('Dropdown menu added to test page');
+                }
+                
+                // Set up dropdown functionality
+                const userMenuBtn = document.getElementById('user-menu-btn');
+                const userMenuDropdown = document.getElementById('user-menu-dropdown');
+                
+                if (userMenuBtn && userMenuDropdown) {
+                    userMenuBtn.addEventListener('click', () => {
+                        userMenuDropdown.classList.toggle('hidden');
+                        console.log('Dropdown toggled');
+                    });
+                    
+                    // Close dropdown when clicking outside
+                    document.addEventListener('click', (e) => {
+                        if (!userMenuBtn.contains(e.target) && !userMenuDropdown.contains(e.target)) {
+                            userMenuDropdown.classList.add('hidden');
+                        }
+                    });
+                }
+                
+            } catch (error) {
+                console.error('Error setting up dropdown:', error);
+            }
+            
+            // Set up form submission
+            const healthForm = document.getElementById('health-form');
+            if (healthForm) {
+                healthForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    console.log('Form submitted');
+                    alert('Registo adicionado com sucesso!');
+                });
+                console.log('Form event listener added');
+            }
+            
+            console.log('Clean app test initialization complete');
+        });
+    </script>
+
+</body>
+</html> 

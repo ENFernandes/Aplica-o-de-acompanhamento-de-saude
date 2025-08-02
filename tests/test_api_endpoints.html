@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Endpoints Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-md p-6">
+        <h1 class="text-2xl font-bold mb-6 text-center">API Endpoints Test</h1>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <button onclick="testHealth()" class="bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700">
+                Test Health Endpoint
+            </button>
+            <button onclick="testAuthRoutes()" class="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700">
+                Test Auth Routes
+            </button>
+            <button onclick="testRegistration()" class="bg-purple-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-purple-700">
+                Test Registration
+            </button>
+            <button onclick="testAllEndpoints()" class="bg-orange-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-orange-700">
+                Test All Endpoints
+            </button>
+        </div>
+        
+        <div id="results" class="space-y-4"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3000/api';
+        
+        function addResult(title, content, isSuccess = true) {
+            const resultsDiv = document.getElementById('results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `p-4 rounded-lg ${isSuccess ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`;
+            resultDiv.innerHTML = `
+                <h3 class="font-bold">${title}</h3>
+                <pre class="mt-2 text-sm overflow-x-auto">${JSON.stringify(content, null, 2)}</pre>
+            `;
+            resultsDiv.appendChild(resultDiv);
+        }
+        
+        async function testHealth() {
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                const data = await response.json();
+                addResult('Health Endpoint', { status: response.status, data });
+            } catch (error) {
+                addResult('Health Endpoint Error', { error: error.message }, false);
+            }
+        }
+        
+        async function testAuthRoutes() {
+            const routes = [
+                { name: 'Register', method: 'POST', body: { email: 'test@test.com', password: 'TestPass123!', name: 'Test User' } },
+                { name: 'Login', method: 'POST', body: { email: 'test@test.com', password: 'TestPass123!' } },
+                { name: 'Me (Unauthorized)', method: 'GET' }
+            ];
+            
+            for (const route of routes) {
+                try {
+                    const options = {
+                        method: route.method,
+                        headers: { 'Content-Type': 'application/json' }
+                    };
+                    
+                    if (route.body) {
+                        options.body = JSON.stringify(route.body);
+                    }
+                    
+                    const response = await fetch(`${API_BASE}/auth/${route.name.toLowerCase()}`, options);
+                    const data = await response.json();
+                    addResult(`${route.name} Route`, { status: response.status, data });
+                } catch (error) {
+                    addResult(`${route.name} Route Error`, { error: error.message }, false);
+                }
+            }
+        }
+        
+        async function testRegistration() {
+            try {
+                const response = await fetch(`${API_BASE}/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'test@test.com',
+                        password: 'TestPass123!',
+                        name: 'Test User'
+                    })
+                });
+                
+                const data = await response.json();
+                addResult('Registration Test', { status: response.status, data });
+            } catch (error) {
+                addResult('Registration Test Error', { error: error.message }, false);
+            }
+        }
+        
+        async function testAllEndpoints() {
+            document.getElementById('results').innerHTML = '';
+            
+            // Test health
+            await testHealth();
+            
+            // Test auth routes
+            await testAuthRoutes();
+            
+            // Test other endpoints
+            const otherEndpoints = [
+                { name: 'Health Records', path: '/health-records' },
+                { name: 'Users', path: '/users' }
+            ];
+            
+            for (const endpoint of otherEndpoints) {
+                try {
+                    const response = await fetch(`${API_BASE}${endpoint.path}`, {
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    const data = await response.json();
+                    addResult(`${endpoint.name} Endpoint`, { status: response.status, data });
+                } catch (error) {
+                    addResult(`${endpoint.name} Endpoint Error`, { error: error.message }, false);
+                }
+            }
+        }
+    </script>
+</body>
+</html> 

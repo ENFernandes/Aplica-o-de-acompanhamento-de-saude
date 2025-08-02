@@ -1,0 +1,185 @@
+/* Health Tracker Styles */
+body { 
+    font-family: 'Inter', sans-serif; 
+    background-color: #f4f7f6; 
+}
+
+.chart-container { 
+    position: relative; 
+    height: 350px; 
+    width: 100%; 
+}
+
+td[contenteditable="true"] { 
+    background-color: #eff6ff; 
+    outline: 1px solid #60a5fa; 
+}
+
+td[title]:hover::after {
+    content: attr(title);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #1f2937;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    white-space: nowrap;
+    z-index: 10;
+}
+
+/* Mobile optimization */
+@media screen and (max-width: 767px) {
+    #history-section table, 
+    #history-section thead, 
+    #history-section tbody, 
+    #history-section th, 
+    #history-section td, 
+    #history-section tr {
+        display: block;
+    }
+
+    #history-section thead tr {
+        position: absolute;
+        top: -9999px;
+        left: -9999px;
+    }
+
+    #history-section tr {
+        border: 1px solid #e5e7eb;
+        border-radius: 0.75rem;
+        margin-bottom: 1rem;
+        background-color: white;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+        padding: 0.5rem;
+    }
+    
+    #history-section td {
+        border: none;
+        border-bottom: 1px solid #f3f4f6;
+        position: relative;
+        padding-left: 45%;
+        padding-top: 0.75rem;
+        padding-bottom: 0.75rem;
+        text-align: right;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    #history-section td:last-child {
+        border-bottom: 0;
+    }
+
+    #history-section td::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 0;
+        width: 45%;
+        padding-left: 1rem;
+        font-weight: 600;
+        text-align: left;
+        color: #4b5563;
+    }
+}
+
+/* Loading animation */
+.loading-spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Toast notifications */
+.toast-notification {
+    transition: all 0.3s ease-in-out;
+}
+
+.toast-notification.hidden {
+    opacity: 0;
+    transform: translateY(100%);
+}
+
+/* Modal animations */
+.modal-overlay {
+    transition: opacity 0.3s ease-in-out;
+}
+
+.modal-content {
+    transition: transform 0.3s ease-in-out;
+}
+
+/* Form styling */
+.form-input:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Button hover effects */
+.btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Chart responsiveness */
+.chart-wrapper {
+    position: relative;
+    height: 100%;
+    width: 100%;
+}
+
+/* Table styling */
+.table-container {
+    overflow-x: auto;
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+/* Card styling */
+.card {
+    background: white;
+    border-radius: 0.75rem;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+    transition: box-shadow 0.3s ease-in-out;
+}
+
+.card:hover {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive grid */
+.grid-responsive {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .bg-gray-50 {
+        background-color: #ffffff !important;
+        border: 2px solid #000000 !important;
+    }
+    
+    .text-gray-600 {
+        color: #000000 !important;
+    }
+} 

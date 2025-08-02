@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test All Routes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-6xl mx-auto bg-white rounded-lg shadow-md p-6">
+        <h1 class="text-2xl font-bold mb-6 text-center">Test All Available Routes</h1>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+            <button onclick="testRoute('GET', '/api/health')" class="bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700">
+                GET /api/health
+            </button>
+            
+            <button onclick="testRoute('POST', '/api/auth/register')" class="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700">
+                POST /api/auth/register
+            </button>
+            
+            <button onclick="testRoute('POST', '/api/auth/login')" class="bg-purple-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-purple-700">
+                POST /api/auth/login
+            </button>
+            
+            <button onclick="testRoute('GET', '/api/auth/me')" class="bg-orange-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-orange-700">
+                GET /api/auth/me
+            </button>
+            
+            <button onclick="testRoute('GET', '/api/health-records')" class="bg-red-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-700">
+                GET /api/health-records
+            </button>
+            
+            <button onclick="testRoute('GET', '/api/users')" class="bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-indigo-700">
+                GET /api/users
+            </button>
+            
+            <button onclick="testRoute('POST', '/api/auth/logout')" class="bg-yellow-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-yellow-700">
+                POST /api/auth/logout
+            </button>
+            
+            <button onclick="testRoute('POST', '/api/auth/forgot-password')" class="bg-pink-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-pink-700">
+                POST /api/auth/forgot-password
+            </button>
+            
+            <button onclick="testRoute('POST', '/api/auth/reset-password')" class="bg-teal-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-teal-700">
+                POST /api/auth/reset-password
+            </button>
+        </div>
+        
+        <button onclick="testAllRoutes()" class="w-full bg-gray-800 text-white font-bold py-3 px-4 rounded-lg hover:bg-gray-900 mb-4">
+            Test All Routes at Once
+        </button>
+        
+        <div id="results" class="space-y-4"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3000';
+        
+        function addResult(method, route, content, isSuccess = true) {
+            const resultsDiv = document.getElementById('results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `p-4 rounded-lg ${isSuccess ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`;
+            resultDiv.innerHTML = `
+                <h3 class="font-bold">${method} ${route}</h3>
+                <pre class="mt-2 text-sm overflow-x-auto">${JSON.stringify(content, null, 2)}</pre>
+            `;
+            resultsDiv.appendChild(resultDiv);
+        }
+        
+        async function testRoute(method, route) {
+            try {
+                console.log(`Testing ${method} ${route}`);
+                
+                const options = {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' }
+                };
+                
+                // Add body for POST requests
+                if (method === 'POST') {
+                    if (route.includes('/register')) {
+                        options.body = JSON.stringify({
+                            email: 'test@test.com',
+                            password: 'TestPass123!',
+                            name: 'Test User'
+                        });
+                    } else if (route.includes('/login')) {
+                        options.body = JSON.stringify({
+                            email: 'test@test.com',
+                            password: 'TestPass123!'
+                        });
+                    } else if (route.includes('/forgot-password')) {
+                        options.body = JSON.stringify({
+                            email: 'test@test.com'
+                        });
+                    } else if (route.includes('/reset-password')) {
+                        options.body = JSON.stringify({
+                            token: 'test-token',
+                            newPassword: 'NewPass123!'
+                        });
+                    } else {
+                        options.body = JSON.stringify({});
+                    }
+                }
+                
+                const response = await fetch(`${API_BASE}${route}`, options);
+                const data = await response.json();
+                
+                console.log(`Response for ${method} ${route}:`, data);
+                
+                addResult(method, route, { 
+                    status: response.status, 
+                    statusText: response.statusText,
+                    data: data 
+                });
+            } catch (error) {
+                console.error(`Error testing ${method} ${route}:`, error);
+                addResult(method, route, { 
+                    error: error.message,
+                    type: error.name 
+                }, false);
+            }
+        }
+        
+        async function testAllRoutes() {
+            document.getElementById('results').innerHTML = '';
+            
+            const routes = [
+                { method: 'GET', route: '/api/health' },
+                { method: 'POST', route: '/api/auth/register' },
+                { method: 'POST', route: '/api/auth/login' },
+                { method: 'GET', route: '/api/auth/me' },
+                { method: 'GET', route: '/api/health-records' },
+                { method: 'GET', route: '/api/users' },
+                { method: 'POST', route: '/api/auth/logout' },
+                { method: 'POST', route: '/api/auth/forgot-password' },
+                { method: 'POST', route: '/api/auth/reset-password' }
+            ];
+            
+            for (const route of routes) {
+                await testRoute(route.method, route.route);
+                // Small delay between requests
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+        }
+    </script>
+</body>
+</html> 

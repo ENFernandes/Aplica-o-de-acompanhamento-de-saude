@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Profile Update</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-2xl mx-auto bg-white rounded-lg shadow-md p-6">
+        <h1 class="text-2xl font-bold mb-6 text-center">Test Profile Update</h1>
+        
+        <div class="space-y-4 mb-6">
+            <button onclick="testWithRealToken()" class="w-full bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700">
+                Test with Real Token (Register + Update)
+            </button>
+            
+            <button onclick="testWithExistingToken()" class="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700">
+                Test with Existing Token
+            </button>
+            
+            <button onclick="testInvalidToken()" class="w-full bg-red-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-700">
+                Test Invalid Token (Should Fail)
+            </button>
+        </div>
+        
+        <div id="result" class="mt-4 p-4 rounded-lg hidden"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3000/api';
+        
+        function showResult(content, isSuccess = true) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = `mt-4 p-4 rounded-lg ${isSuccess ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`;
+            resultDiv.innerHTML = `<pre class="text-sm">${JSON.stringify(content, null, 2)}</pre>`;
+            resultDiv.classList.remove('hidden');
+        }
+        
+        async function testWithRealToken() {
+            try {
+                showResult({ message: 'Starting test with real token...' });
+                
+                // Step 1: Register a new user to get a real token
+                const registerResponse = await fetch(`${API_BASE}/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'test@test.com',
+                        password: 'TestPass123!',
+                        name: 'Test User'
+                    })
+                });
+                
+                const registerData = await registerResponse.json();
+                
+                if (registerData.token) {
+                    showResult({ 
+                        message: 'Registration successful, testing profile update...',
+                        token: registerData.token.substring(0, 20) + '...'
+                    });
+                    
+                    // Step 2: Test profile update with real token
+                    const updateResponse = await fetch(`${API_BASE}/users/profile`, {
+                        method: 'PUT',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${registerData.token}`
+                        },
+                        body: JSON.stringify({
+                            name: 'Test User Updated',
+                            email: 'test@test.com',
+                            address: 'Rua João Paulo II, nº 695, casa 26, Marinhas Esposende',
+                            taxId: '241543002',
+                            height: '190'
+                        })
+                    });
+                    
+                    const updateData = await updateResponse.json();
+                    showResult({ 
+                        status: updateResponse.status, 
+                        statusText: updateResponse.statusText,
+                        data: updateData,
+                        message: updateResponse.ok ? 'Profile update successful!' : 'Profile update failed'
+                    });
+                } else {
+                    showResult({ 
+                        error: 'Failed to get token from registration',
+                        data: registerData 
+                    }, false);
+                }
+            } catch (error) {
+                showResult({ error: error.message }, false);
+            }
+        }
+        
+        async function testWithExistingToken() {
+            try {
+                // Try to get token from localStorage
+                const token = localStorage.getItem('auth-token');
+                
+                if (!token) {
+                    showResult({ 
+                        error: 'No token found in localStorage. Please login first or use the "Test with Real Token" button.' 
+                    }, false);
+                    return;
+                }
+                
+                showResult({ 
+                    message: 'Testing with existing token from localStorage...',
+                    token: token.substring(0, 20) + '...'
+                });
+                
+                const updateResponse = await fetch(`${API_BASE}/users/profile`, {
+                    method: 'PUT',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        name: 'Test User Updated',
+                        email: 'test@test.com',
+                        address: 'Rua João Paulo II, nº 695, casa 26, Marinhas Esposende',
+                        taxId: '241543002',
+                        height: '190'
+                    })
+                });
+                
+                const updateData = await updateResponse.json();
+                showResult({ 
+                    status: updateResponse.status, 
+                    statusText: updateResponse.statusText,
+                    data: updateData,
+                    message: updateResponse.ok ? 'Profile update successful!' : 'Profile update failed'
+                });
+            } catch (error) {
+                showResult({ error: error.message }, false);
+            }
+        }
+        
+        async function testInvalidToken() {
+            try {
+                showResult({ message: 'Testing with invalid token (should fail)...' });
+                
+                const response = await fetch(`${API_BASE}/users/profile`, {
+                    method: 'PUT',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer invalid-token'
+                    },
+                    body: JSON.stringify({
+                        name: 'Test User Updated',
+                        email: 'test@test.com'
+                    })
+                });
+                
+                const data = await response.json();
+                showResult({ 
+                    status: response.status, 
+                    statusText: response.statusText,
+                    data: data,
+                    message: response.status === 403 ? 'Correctly rejected invalid token!' : 'Unexpected response'
+                });
+            } catch (error) {
+                showResult({ error: error.message }, false);
+            }
+        }
+    </script>
+</body>
+</html> 

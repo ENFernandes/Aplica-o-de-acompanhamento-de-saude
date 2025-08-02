@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Height Field Test - Health Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+    <div class="min-h-screen p-4">
+        <div class="max-w-4xl mx-auto">
+            <h1 class="text-2xl font-bold text-center mb-8">Height Field Test</h1>
+            
+            <!-- Test Form -->
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+                <h2 class="text-xl font-semibold mb-4">Test Form</h2>
+                <form id="test-form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Data</label>
+                        <input type="date" id="date" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Peso (kg)</label>
+                        <input type="number" step="0.1" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Altura (cm)</label>
+                        <input type="number" id="height" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Idade</label>
+                        <input type="number" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                    </div>
+                    <div class="md:col-span-2">
+                        <button type="submit" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700">
+                            Testar Formulário
+                        </button>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Test Controls -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h2 class="text-xl font-semibold mb-4">Test Controls</h2>
+                <div class="space-y-4">
+                    <div>
+                        <button id="set-height-btn" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">
+                            Set Height to 175cm (Read-only)
+                        </button>
+                    </div>
+                    <div>
+                        <button id="clear-height-btn" class="bg-yellow-600 text-white px-4 py-2 rounded-md hover:bg-yellow-700">
+                            Clear Height (Editable)
+                        </button>
+                    </div>
+                    <div>
+                        <button id="show-placeholder-btn" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+                            Show Placeholder
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="mt-6 p-4 bg-gray-50 rounded-md">
+                    <h3 class="font-semibold mb-2">Expected Behavior:</h3>
+                    <ul class="text-sm space-y-1">
+                        <li>✅ Height field should be read-only when user has height in profile</li>
+                        <li>✅ Height field should show placeholder when no height in profile</li>
+                        <li>✅ Height field should have gray background when read-only</li>
+                        <li>✅ Height field should be editable when no height is set</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Set current date
+        document.getElementById('date').value = new Date().toISOString().split('T')[0];
+        
+        // Test controls
+        document.getElementById('set-height-btn').addEventListener('click', () => {
+            const heightInput = document.getElementById('height');
+            heightInput.value = '175';
+            heightInput.readOnly = true;
+            heightInput.classList.add('bg-gray-100', 'cursor-not-allowed');
+            console.log('Height set to 175cm (read-only)');
+        });
+        
+        document.getElementById('clear-height-btn').addEventListener('click', () => {
+            const heightInput = document.getElementById('height');
+            heightInput.value = '';
+            heightInput.readOnly = false;
+            heightInput.classList.remove('bg-gray-100', 'cursor-not-allowed');
+            console.log('Height cleared (editable)');
+        });
+        
+        document.getElementById('show-placeholder-btn').addEventListener('click', () => {
+            const heightInput = document.getElementById('height');
+            heightInput.value = '';
+            heightInput.placeholder = 'Defina a sua altura no perfil';
+            heightInput.readOnly = false;
+            heightInput.classList.remove('bg-gray-100', 'cursor-not-allowed');
+            console.log('Height placeholder shown');
+        });
+        
+        // Form submission
+        document.getElementById('test-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const heightInput = document.getElementById('height');
+            console.log('Form submitted');
+            console.log('Height value:', heightInput.value);
+            console.log('Height read-only:', heightInput.readOnly);
+            alert('Form submitted! Check console for details.');
+        });
+        
+        console.log('Height field test page loaded');
+    </script>
+</body>
+</html> 

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple App Test - Health Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="src/css/styles.css">
+</head>
+<body class="text-gray-800">
+    <div class="container mx-auto p-4 md:p-6">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-blue-600">Health Tracker v4</h1>
+            <p class="text-md md:text-lg text-gray-600 mt-2">Simple App Test</p>
+            <p id="user-id-display" class="text-xs md:text-sm text-gray-500 mt-2 break-all px-2">Test User</p>
+        </header>
+
+        <section class="mb-12 bg-white p-4 md:p-8 rounded-xl shadow-lg">
+            <h2 class="text-xl md:text-2xl font-bold mb-6">Test Form</h2>
+            <form id="health-form" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="col-span-1 sm:col-span-2 lg:col-span-1">
+                    <label class="block text-sm font-medium">Data</label>
+                    <input type="date" id="date" name="date" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                </div>
+                <div class="col-span-1">
+                    <label class="block text-sm font-medium">Peso (kg)</label>
+                    <input type="number" step="0.1" name="weight" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                </div>
+                <div class="col-span-1">
+                    <label class="block text-sm font-medium">Altura (cm)</label>
+                    <input type="number" name="height" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                </div>
+                <div class="col-span-1 sm:col-span-2 lg:col-span-4 mt-4">
+                    <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-300 shadow-md">
+                        Test Submit
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <section class="mb-12">
+            <h2 class="text-xl md:text-2xl font-bold mb-4">Test Charts</h2>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="bg-white p-4 md:p-6 rounded-xl shadow-lg">
+                    <div class="chart-container">
+                        <canvas id="testChart1"></canvas>
+                    </div>
+                </div>
+                <div class="bg-white p-4 md:p-6 rounded-xl shadow-lg">
+                    <div class="chart-container">
+                        <canvas id="testChart2"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2 class="text-xl md:text-2xl font-bold mb-4">Test Table</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left text-gray-500">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                        <tr>
+                            <th scope="col" class="py-3 px-4">Data</th>
+                            <th scope="col" class="py-3 px-4">Peso</th>
+                            <th scope="col" class="py-3 px-4">Altura</th>
+                            <th scope="col" class="py-3 px-4">IMC</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="border-b border-gray-200">
+                            <td class="py-3 px-4">2025-07-28</td>
+                            <td class="py-3 px-4">75.5</td>
+                            <td class="py-3 px-4">175</td>
+                            <td class="py-3 px-4">24.7</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // Set current date
+        document.getElementById('date').value = new Date().toISOString().split('T')[0];
+        
+        // Test form submission
+        document.getElementById('health-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            alert('Form submitted successfully!');
+        });
+        
+        // Test charts
+        const ctx1 = document.getElementById('testChart1').getContext('2d');
+        const ctx2 = document.getElementById('testChart2').getContext('2d');
+        
+        new Chart(ctx1, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
+                datasets: [{
+                    label: 'Weight',
+                    data: [75, 74.5, 74, 73.5, 73],
+                    borderColor: 'rgb(59, 130, 246)',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+        
+        new Chart(ctx2, {
+            type: 'doughnut',
+            data: {
+                labels: ['Muscle', 'Fat', 'Bone'],
+                datasets: [{
+                    data: [65, 20, 15],
+                    backgroundColor: ['#10B981', '#F59E0B', '#6B7280']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+    </script>
+</body>
+</html> 

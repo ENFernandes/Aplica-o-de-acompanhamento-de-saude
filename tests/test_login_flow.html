@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Flow Test - Health Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold text-center mb-8">Login Flow Test</h1>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Test Login -->
+            <div class="bg-white p-6 rounded-lg shadow-lg">
+                <h2 class="text-xl font-semibold mb-4">Test Login</h2>
+                <form id="test-login-form" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Email</label>
+                        <input type="email" name="email" required 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="test@healthtracker.com" value="test@healthtracker.com">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Password</label>
+                        <input type="password" name="password" required 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="password123" value="password123">
+                    </div>
+                    <button type="submit" 
+                        class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700">
+                        Test Login
+                    </button>
+                </form>
+            </div>
+            
+            <!-- Test Results -->
+            <div class="bg-white p-6 rounded-lg shadow-lg">
+                <h2 class="text-xl font-semibold mb-4">Test Results</h2>
+                <div id="test-results" class="space-y-2">
+                    <p class="text-gray-600">Click "Test Login" to see results...</p>
+                </div>
+                
+                <div class="mt-6">
+                    <h3 class="font-semibold mb-2">Expected Flow:</h3>
+                    <ol class="list-decimal list-inside space-y-1 text-sm text-gray-600">
+                        <li>User enters credentials</li>
+                        <li>User submits login form</li>
+                        <li>Login succeeds</li>
+                        <li>Success message shows</li>
+                        <li>User is redirected to main app</li>
+                        <li>App area becomes visible</li>
+                        <li>User can see health tracking interface</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-8 text-center">
+            <a href="index.html" class="text-blue-600 hover:text-blue-800">Back to Main App</a>
+        </div>
+    </div>
+
+    <script type="module">
+        const testForm = document.getElementById('test-login-form');
+        const testResults = document.getElementById('test-results');
+        
+        testForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const email = formData.get('email');
+            const password = formData.get('password');
+            
+            testResults.innerHTML = '<p class="text-blue-600">Testing login...</p>';
+            
+            try {
+                // Import and test AuthService
+                const { AuthService } = await import('./src/js/authService.js');
+                const authService = new AuthService();
+                
+                // Test login
+                const result = await authService.login(email, password);
+                
+                if (result.success) {
+                    testResults.innerHTML = `
+                        <div class="space-y-2">
+                            <p class="text-green-600">✅ Login successful!</p>
+                            <p class="text-sm">User: ${result.user.name}</p>
+                            <p class="text-sm">Email: ${result.user.email}</p>
+                            <p class="text-sm">ID: ${result.user.id}</p>
+                            <p class="text-blue-600">User should now see the main app</p>
+                        </div>
+                    `;
+                    
+                    // Test that user is now authenticated
+                    const authStatus = await authService.checkAuthStatus();
+                    if (authStatus) {
+                        testResults.innerHTML += '<p class="text-green-600">✅ User is authenticated (correct behavior)</p>';
+                    } else {
+                        testResults.innerHTML += '<p class="text-red-600">❌ User is not authenticated (incorrect behavior)</p>';
+                    }
+                    
+                } else {
+                    testResults.innerHTML = '<p class="text-red-600">❌ Login failed</p>';
+                }
+                
+            } catch (error) {
+                testResults.innerHTML = `<p class="text-red-600">❌ Error: ${error.message}</p>`;
+            }
+        });
+    </script>
+</body>
+</html> 

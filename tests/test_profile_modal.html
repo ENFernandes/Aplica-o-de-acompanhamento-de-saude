@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile Modal Test - Health Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+    <div class="min-h-screen p-4">
+        <div class="max-w-4xl mx-auto">
+            <h1 class="text-2xl font-bold text-center mb-8">Profile Modal Test</h1>
+            
+            <!-- Test Controls -->
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+                <h2 class="text-xl font-semibold mb-4">Test Profile Modal</h2>
+                <div class="space-y-4">
+                    <button id="open-modal-btn" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+                        Open Profile Edit Modal
+                    </button>
+                    <button id="test-save-btn" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">
+                        Test Save (Success)
+                    </button>
+                    <button id="test-error-btn" class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700">
+                        Test Save (Error)
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Status Display -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h2 class="text-xl font-semibold mb-4">Status</h2>
+                <div id="status-display" class="text-sm">
+                    <p>Modal status: <span id="modal-status">Closed</span></p>
+                    <p>Last action: <span id="last-action">None</span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast-notification" class="fixed bottom-5 right-5 text-white py-2 px-4 rounded-lg shadow-lg hidden">
+        <p id="toast-message"></p>
+    </div>
+
+    <script>
+        let modalOpen = false;
+        
+        // Mock user data
+        const testUser = {
+            name: 'Test User',
+            email: 'test@example.com',
+            phone: '+351 912 345 678',
+            address: 'Rua Teste, 123',
+            taxId: '123456789',
+            height: '175'
+        };
+        
+        // Mock AuthComponents
+        const AuthComponents = {
+            createProfileEditForm: (user, onSave, onCancel) => {
+                return `
+                    <div class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center p-4 z-50">
+                        <div class="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+                            <div class="px-6 py-4 border-b border-gray-200">
+                                <h3 class="text-lg font-medium text-gray-900">Editar Perfil</h3>
+                            </div>
+                            
+                            <form id="profile-edit-form" class="px-6 py-4 space-y-4">
+                                <div>
+                                    <label for="edit-name" class="block text-sm font-medium text-gray-700 mb-1">Nome Completo *</label>
+                                    <input type="text" id="edit-name" name="name" value="${user.name || ''}" required 
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                </div>
+                                
+                                <div>
+                                    <label for="edit-email" class="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+                                    <input type="email" id="edit-email" name="email" value="${user.email || ''}" required 
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                </div>
+                                
+                                <div>
+                                    <label for="edit-phone" class="block text-sm font-medium text-gray-700 mb-1">Número de Telemóvel</label>
+                                    <input type="tel" id="edit-phone" name="phone" value="${user.phone || ''}" 
+                                        placeholder="+351 912 345 678"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                </div>
+                                
+                                <div>
+                                    <label for="edit-address" class="block text-sm font-medium text-gray-700 mb-1">Morada</label>
+                                    <textarea id="edit-address" name="address" rows="3" 
+                                        placeholder="Rua, número, código postal, cidade"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">${user.address || ''}</textarea>
+                                </div>
+                                
+                                <div>
+                                    <label for="edit-taxId" class="block text-sm font-medium text-gray-700 mb-1">Número de Identificação Fiscal</label>
+                                    <input type="text" id="edit-taxId" name="taxId" value="${user.taxId || ''}" 
+                                        placeholder="123456789"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                </div>
+                                
+                                <div>
+                                    <label for="edit-height" class="block text-sm font-medium text-gray-700 mb-1">Altura (cm)</label>
+                                    <input type="number" id="edit-height" name="height" value="${user.height || ''}" 
+                                        placeholder="175"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                    <p class="text-xs text-gray-500 mt-1">Esta altura será usada automaticamente no formulário principal</p>
+                                </div>
+                                
+                                <div class="flex justify-end space-x-3 pt-4">
+                                    <button type="button" id="cancel-edit-btn" 
+                                        class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                        Cancelar
+                                    </button>
+                                    <button type="submit" 
+                                        class="px-4 py-2 bg-blue-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                        Guardar Alterações
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                `;
+            }
+        };
+        
+        // Mock UIService
+        const UIService = {
+            showToast: (message, isError = true) => {
+                const toast = document.getElementById('toast-notification');
+                const toastMessage = document.getElementById('toast-message');
+                
+                toastMessage.textContent = message;
+                toast.className = `fixed bottom-5 right-5 text-white py-2 px-4 rounded-lg shadow-lg ${isError ? 'bg-red-500' : 'bg-green-500'}`;
+                
+                toast.classList.remove('hidden');
+                
+                setTimeout(() => {
+                    toast.classList.add('hidden');
+                }, 3000);
+                
+                console.log('Toast shown:', message);
+            }
+        };
+        
+        // Open modal
+        document.getElementById('open-modal-btn').addEventListener('click', () => {
+            const modalHTML = AuthComponents.createProfileEditForm(testUser, handleSave, handleCancel);
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+            modalOpen = true;
+            updateStatus('Modal opened');
+            
+            // Set up form event listeners
+            const form = document.getElementById('profile-edit-form');
+            const cancelBtn = document.getElementById('cancel-edit-btn');
+            
+            if (form) {
+                form.addEventListener('submit', handleFormSubmit);
+            }
+            if (cancelBtn) {
+                cancelBtn.addEventListener('click', handleCancel);
+            }
+        });
+        
+        // Test save success
+        document.getElementById('test-save-btn').addEventListener('click', () => {
+            if (modalOpen) {
+                handleSave();
+            } else {
+                alert('Please open the modal first');
+            }
+        });
+        
+        // Test save error
+        document.getElementById('test-error-btn').addEventListener('click', () => {
+            if (modalOpen) {
+                handleSaveError();
+            } else {
+                alert('Please open the modal first');
+            }
+        });
+        
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            handleSave();
+        }
+        
+        function handleSave() {
+            // Show success message first
+            UIService.showToast('Perfil atualizado com sucesso!', false);
+            
+            // Close modal after delay
+            setTimeout(() => {
+                const modal = document.querySelector('.fixed.inset-0.bg-gray-600.bg-opacity-50');
+                if (modal) {
+                    modal.remove();
+                }
+                modalOpen = false;
+                updateStatus('Modal closed after successful save');
+            }, 500);
+        }
+        
+        function handleSaveError() {
+            UIService.showToast('Erro ao atualizar perfil', true);
+            updateStatus('Save error occurred');
+        }
+        
+        function handleCancel() {
+            const modal = document.querySelector('.fixed.inset-0.bg-gray-600.bg-opacity-50');
+            if (modal) {
+                modal.remove();
+            }
+            modalOpen = false;
+            updateStatus('Modal closed (cancelled)');
+        }
+        
+        function updateStatus(action) {
+            document.getElementById('modal-status').textContent = modalOpen ? 'Open' : 'Closed';
+            document.getElementById('last-action').textContent = action;
+        }
+        
+        console.log('Profile modal test page loaded');
+    </script>
+</body>
+</html> 

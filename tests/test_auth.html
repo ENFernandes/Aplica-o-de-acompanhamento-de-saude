@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auth Test - Health Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+    <div class="min-h-screen flex items-center justify-center">
+        <div class="max-w-md w-full space-y-8">
+            <div>
+                <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+                    Auth Test
+                </h2>
+                <p class="mt-2 text-center text-sm text-gray-600">
+                    Testing authentication system
+                </p>
+            </div>
+            
+            <div id="test-results" class="bg-white p-4 rounded-lg shadow">
+                <h3 class="font-semibold mb-2">Test Results:</h3>
+                <div id="results-content">
+                    <p>Running tests...</p>
+                </div>
+            </div>
+            
+            <div class="text-center">
+                <a href="index.html" class="text-blue-600 hover:text-blue-800">Back to Main App</a>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        const resultsContent = document.getElementById('results-content');
+        const results = [];
+        
+        async function runTests() {
+            try {
+                // Test 1: Import modules
+                results.push('Testing module imports...');
+                const { AuthService } = await import('./src/js/authService.js');
+                const { AuthManager } = await import('./src/js/authManager.js');
+                const { AuthComponents } = await import('./src/components/authComponents.js');
+                results.push('✅ All modules imported successfully');
+                
+                // Test 2: Create AuthService
+                results.push('Testing AuthService...');
+                const authService = new AuthService();
+                results.push('✅ AuthService created successfully');
+                
+                // Test 3: Check auth status
+                results.push('Testing auth status...');
+                const authStatus = await authService.checkAuthStatus();
+                results.push(`✅ Auth status: ${authStatus ? 'User found' : 'No user'}`);
+                
+                // Test 4: Test login form generation
+                results.push('Testing login form generation...');
+                const loginHTML = AuthComponents.createLoginForm(
+                    () => console.log('Login submitted'),
+                    () => console.log('Switch to register'),
+                    () => console.log('Switch to password recovery')
+                );
+                results.push('✅ Login form generated successfully');
+                
+                // Test 5: Test AuthManager
+                results.push('Testing AuthManager...');
+                const authManager = new AuthManager();
+                results.push('✅ AuthManager created successfully');
+                
+                // Test 6: Force show login
+                results.push('Testing showLogin...');
+                authManager.showLogin();
+                results.push('✅ Login form should be visible');
+                
+                // Test 7: Check DOM elements
+                results.push('Testing DOM elements...');
+                const authArea = document.getElementById('auth-area');
+                const appArea = document.getElementById('app-area');
+                results.push(`✅ Auth area found: ${!!authArea}`);
+                results.push(`✅ App area found: ${!!appArea}`);
+                
+                // Test 8: Test login with test user
+                results.push('Testing login with test user...');
+                try {
+                    const loginResult = await authService.login('test@healthtracker.com', 'password123');
+                    results.push(`✅ Login successful: ${loginResult.user.name}`);
+                } catch (error) {
+                    results.push(`❌ Login failed: ${error.message}`);
+                }
+                
+            } catch (error) {
+                results.push(`❌ Error: ${error.message}`);
+                console.error('Test error:', error);
+            }
+            
+            // Display results
+            resultsContent.innerHTML = results.map(result => `<p class="mb-1">${result}</p>`).join('');
+        }
+        
+        runTests();
+    </script>
+</body>
+</html> 
