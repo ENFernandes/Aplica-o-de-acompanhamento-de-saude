@@ -1,7 +1,6 @@
 // Main application service
 import { ValidationService } from './validationService.js';
 import { UIService } from './uiService.js';
-import { AuthManager } from './authManager.js';
 import { ChartService } from './chartService.js';
 import { tableFields } from '../data/initialData.js';
 
@@ -14,7 +13,6 @@ export class AppService {
         
         // Initialize services
         this.uiService = new UIService();
-        this.authManager = new AuthManager();
         this.chartService = new ChartService();
         
         // Bind methods
@@ -26,20 +24,40 @@ export class AppService {
 
     async initialize() {
         try {
-            // Check if user is authenticated
-            if (this.authManager.isAuthenticated()) {
-                const user = this.authManager.getCurrentUser();
-                if (user) {
-                    this.userId = user.id;
-                    await this.setupAuth();
-                } else {
-                    // Show login if not authenticated
-                    this.authManager.showLogin();
+            // Check if user is authenticated by checking token
+            const token = localStorage.getItem('auth-token');
+            if (token) {
+                // Try to decode token to get user info
+                try {
+                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    const currentTime = Math.floor(Date.now() / 1000);
+                    
+                    if (payload.exp && payload.exp > currentTime && payload.userId) {
+                        // Check if we have a UserActive set
+                        const userActive = localStorage.getItem('userActive');
+                        if (userActive) {
+                            this.userId = userActive;
+                            console.log('Using UserActive ID:', userActive);
+                        } else {
+                            this.userId = payload.userId;
+                            console.log('Using token userId:', payload.userId);
+                        }
+                        await this.setupAuth();
+                    } else {
+                        // Token expired or invalid
+                        localStorage.removeItem('auth-token');
+                        localStorage.removeItem('userActive');
+                        console.log('Token expired or invalid');
+                        return;
+                    }
+                } catch (error) {
+                    console.error('Error decoding token:', error);
+                    localStorage.removeItem('auth-token');
+                    localStorage.removeItem('userActive');
                     return;
                 }
             } else {
-                // Show login if not authenticated
-                this.authManager.showLogin();
+                console.log('No auth token found');
                 return;
             }
         } catch (error) {
@@ -72,7 +90,19 @@ export class AppService {
                 return;
             }
 
-            const response = await fetch('http://localhost:3000/api/health-records', {
+            // Check if we have a UserActive set
+            const userActive = localStorage.getItem('userActive');
+            let endpoint = 'http://localhost:3000/api/health-records';
+            
+            if (userActive) {
+                // Use the specific user endpoint if we have a UserActive
+                endpoint = `http://localhost:3000/api/users/${userActive}/health-records`;
+                console.log('Using UserActive endpoint for health records:', endpoint);
+            } else {
+                console.log('Using authenticated user endpoint for health records:', endpoint);
+            }
+
+            const response = await fetch(endpoint, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${token}`

@@ -194,10 +194,18 @@ export class AuthComponents {
                         </div>
                         <div class="py-1">
                             ${isViewingAnotherUser ? `
+                            <button id="return-to-backoffice-btn" class="block w-full text-left px-4 py-3 text-sm text-purple-600 hover:bg-purple-50 hover:text-purple-700 transition-colors">
+                                <div class="flex items-center">
+                                    <svg class="w-4 h-4 mr-3 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                                    </svg>
+                                    Voltar ao BackOffice
+                                </div>
+                            </button>
                             <button id="return-to-my-profile-btn" class="block w-full text-left px-4 py-3 text-sm text-blue-600 hover:bg-blue-50 hover:text-blue-700 transition-colors">
                                 <div class="flex items-center">
                                     <svg class="w-4 h-4 mr-3 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                                     </svg>
                                     Voltar ao Meu Perfil
                                 </div>

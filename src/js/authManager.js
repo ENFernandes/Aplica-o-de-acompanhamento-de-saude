@@ -2,16 +2,60 @@
 import { AuthService } from './authService.js';
 import { AuthComponents } from '../components/authComponents.js';
 import { UIService } from './uiService.js';
-import { AppService } from './appService.js';
 
 export class AuthManager {
     constructor() {
         this.currentView = 'login';
         this.authService = new AuthService();
         this.uiService = new UIService();
-        this.appService = new AppService();
         this.viewedUser = null; // Track the user being viewed (for admin viewing other users)
         this.bindEvents();
+    }
+
+    // UserActive System - Manages the currently active user ID
+    setUserActive(userId) {
+        localStorage.setItem('userActive', userId);
+        console.log('UserActive set to:', userId);
+    }
+
+    getUserActive() {
+        const userActive = localStorage.getItem('userActive');
+        console.log('UserActive retrieved:', userActive);
+        return userActive;
+    }
+
+    clearUserActive() {
+        localStorage.removeItem('userActive');
+        console.log('UserActive cleared');
+    }
+
+    // Get the current user (either viewed user or authenticated user)
+    getCurrentUser() {
+        // If we have a viewed user (admin viewing another user), return that
+        if (this.viewedUser) {
+            console.log('Returning viewed user:', this.viewedUser.id);
+            return this.viewedUser;
+        }
+        
+        // Otherwise return the authenticated user
+        const currentUser = this.authService.getCurrentUser();
+        console.log('Returning authenticated user:', currentUser?.id);
+        return currentUser;
+    }
+
+    // Get the active user ID (for API calls)
+    getActiveUserId() {
+        const userActive = this.getUserActive();
+        if (userActive) {
+            console.log('Using UserActive ID:', userActive);
+            return userActive;
+        }
+        
+        // Fallback to current user
+        const currentUser = this.getCurrentUser();
+        const userId = currentUser?.id;
+        console.log('Using current user ID:', userId);
+        return userId;
     }
 
     bindEvents() {
@@ -26,6 +70,16 @@ export class AuthManager {
             
             if (authResult.isAuthenticated && authResult.user) {
                 console.log('User authenticated, checking role...');
+                
+                // Check if we have a UserActive set (from BackOffice)
+                const userActive = this.getUserActive();
+                if (userActive && userActive !== authResult.user.id.toString()) {
+                    console.log('UserActive found, loading user profile from database...');
+                    // Find the user name from the users list or use a placeholder
+                    const userName = 'Utilizador'; // We'll get the real name from the API
+                    await this.loadUserProfileFromDatabase(userActive, userName);
+                    return { isAuthenticated: true, user: this.viewedUser };
+                }
                 
                 // Check if user is admin
                 const isAdmin = authResult.user && authResult.user.role === 'admin';
@@ -154,18 +208,51 @@ export class AuthManager {
                     existingProfile.remove();
                 }
                 
-                // Add BackOffice button for admins
-                if (user.role === 'admin') {
-                    const backOfficeButton = `
-                        <a href="admin/admin.html" class="mr-3 px-3 py-2 text-sm bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors duration-200">
-                            🔧 BackOffice
-                        </a>
-                    `;
-                    topRightContainer.insertAdjacentHTML('beforeend', backOfficeButton);
+                // Create a flex container for vertical stacking
+                const flexContainer = document.createElement('div');
+                flexContainer.className = 'flex flex-col items-end space-y-1';
+                
+                // Add BackOffice button for admins first (check authenticated user from token)
+                const token = localStorage.getItem('auth-token');
+                console.log('Checking for auth token:', token ? 'Token exists' : 'No token');
+                
+                if (token) {
+                    try {
+                        // Decode JWT token to get authenticated user info
+                        const payload = JSON.parse(atob(token.split('.')[1]));
+                        console.log('Token payload:', payload);
+                        console.log('Token payload keys:', Object.keys(payload));
+                        console.log('Role in token:', payload.role);
+                        
+                        // Check if authenticated user is admin
+                        if (payload.role === 'admin') {
+                            const backOfficeButton = `
+                                <a href="admin/admin.html" class="px-2 py-1 md:px-3 md:py-2 text-xs md:text-sm bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors duration-200 flex items-center">
+                                    <span class="hidden sm:inline">🔧</span>
+                                    <span class="sm:hidden">🔧</span>
+                                    <span class="hidden md:inline ml-1">BackOffice</span>
+                                    <span class="md:hidden ml-1">Admin</span>
+                                </a>
+                            `;
+                            flexContainer.insertAdjacentHTML('beforeend', backOfficeButton);
+                            console.log('BackOffice button added for admin user');
+                        } else {
+                            console.log('User is not admin, role is:', payload.role);
+                        }
+                    } catch (error) {
+                        console.error('Error decoding token:', error);
+                        console.log('Token structure:', token ? token.substring(0, 50) + '...' : 'No token');
+                    }
+                } else {
+                    console.log('No auth token found in localStorage');
                 }
                 
-                topRightContainer.insertAdjacentHTML('beforeend', userProfileHTML);
-                console.log('User dropdown menu added to top right corner');
+                // Then add the user dropdown menu
+                flexContainer.insertAdjacentHTML('beforeend', userProfileHTML);
+                console.log('User dropdown menu added to flex container');
+                
+                // Add the flex container to the top right
+                topRightContainer.appendChild(flexContainer);
             } else {
                 console.log('Top right container not found, adding to header');
                 header.insertAdjacentHTML('beforeend', userProfileHTML);
@@ -309,6 +396,11 @@ export class AuthManager {
         try {
             const result = await this.authService.login(email, password);
             if (result.success) {
+                // Set the logged-in user as active
+                if (result.user && result.user.id) {
+                    this.setUserActive(result.user.id);
+                }
+                
                 // Check if user is admin
                 const isAdmin = result.user && result.user.role === 'admin';
                 
@@ -442,6 +534,10 @@ export class AuthManager {
 
     async handleLogout() {
         try {
+            // Clear UserActive before logout
+            this.clearUserActive();
+            this.viewedUser = null;
+            
             await this.authService.logout();
             this.uiService.showToast('Logout realizado com sucesso!', false);
             // Redirect to login page instead of showing login form
@@ -565,6 +661,9 @@ export class AuthManager {
         try {
             console.log('Loading user profile from database for ID:', userId);
             
+            // Set this user as the active user
+            this.setUserActive(userId);
+            
             const token = localStorage.getItem('auth-token');
             const response = await fetch(`http://localhost:3000/api/users/${userId}/profile`, {
                 method: 'GET',
@@ -597,6 +696,7 @@ export class AuthManager {
                 // Fallback to current user
                 const currentUser = this.authService.getCurrentUser();
                 this.viewedUser = null;
+                this.clearUserActive();
                 this.updateUserDropdown(currentUser);
             }
             
@@ -606,6 +706,7 @@ export class AuthManager {
             // Fallback to current user
             const currentUser = this.authService.getCurrentUser();
             this.viewedUser = null;
+            this.clearUserActive();
             this.updateUserDropdown(currentUser);
         }
     }
@@ -774,6 +875,11 @@ export class AuthManager {
         // Get the authenticated admin user
         const adminUser = this.authService.getCurrentUser();
         
+        // Set admin as the active user
+        if (adminUser) {
+            this.setUserActive(adminUser.id);
+        }
+        
         // Update form fields with admin's own data
         this.updateFormWithUserData(adminUser);
         
@@ -837,18 +943,37 @@ export class AuthManager {
         const editProfileMenuBtn = document.getElementById('edit-profile-menu-btn');
         const logoutMenuBtn = document.getElementById('logout-menu-btn');
         const viewProfileBtn = document.getElementById('view-profile-btn'); // New button
+        const returnToBackofficeBtn = document.getElementById('return-to-backoffice-btn'); // New button
+        const returnToMyProfileBtn = document.getElementById('return-to-my-profile-btn'); // New button
+
+        console.log('Attaching app events...');
+        console.log('User menu button found:', !!userMenuBtn);
+        console.log('User menu dropdown found:', !!userMenuDropdown);
 
         // Toggle dropdown menu
         if (userMenuBtn && userMenuDropdown) {
-            userMenuBtn.addEventListener('click', () => {
+            console.log('Adding click event listener to user menu button');
+            userMenuBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('User menu button clicked');
+                const isHidden = userMenuDropdown.classList.contains('hidden');
+                console.log('Dropdown is hidden:', isHidden);
                 userMenuDropdown.classList.toggle('hidden');
+                console.log('Dropdown hidden after toggle:', userMenuDropdown.classList.contains('hidden'));
             });
             
             // Close dropdown when clicking outside
             document.addEventListener('click', (e) => {
                 if (!userMenuBtn.contains(e.target) && !userMenuDropdown.contains(e.target)) {
+                    console.log('Clicking outside dropdown, closing it');
                     userMenuDropdown.classList.add('hidden');
                 }
+            });
+        } else {
+            console.log('User menu button or dropdown not found:', {
+                userMenuBtn: !!userMenuBtn,
+                userMenuDropdown: !!userMenuDropdown
             });
         }
 
@@ -877,6 +1002,22 @@ export class AuthManager {
                 window.location.href = 'index.html';
             });
         }
+
+        // Return to BackOffice (when admin is viewing another user's profile)
+        if (returnToBackofficeBtn) {
+            returnToBackofficeBtn.addEventListener('click', () => {
+                userMenuDropdown.classList.add('hidden');
+                window.location.href = 'admin/admin.html';
+            });
+        }
+
+        // Return to my profile (when admin is viewing another user's profile)
+        if (returnToMyProfileBtn) {
+            returnToMyProfileBtn.addEventListener('click', () => {
+                userMenuDropdown.classList.add('hidden');
+                this.clearViewedUser();
+            });
+        }
     }
 
     attachProfileEditEvents() {
@@ -892,10 +1033,6 @@ export class AuthManager {
     }
 
     // Public methods
-    getCurrentUser() {
-        return this.viewedUser || this.authService.getCurrentUser();
-    }
-
     isAuthenticated() {
         // Check if we have a token in localStorage as a quick check
         const token = localStorage.getItem('auth-token');

@@ -2,20 +2,27 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { pool } = require('../config/database');
-const { 
-    authenticateToken, 
-    validatePassword, 
-    validateEmail, 
-    validateName 
-} = require('../middleware/auth');
-const securityConfig = require('../security-config');
 
 const router = express.Router();
 
-// Register new user
-router.post('/register', [validateEmail, validateName, validatePassword], async (req, res) => {
+// Simple register route without middleware
+router.post('/register', async (req, res) => {
     try {
         const { email, password, name } = req.body;
+
+        // Basic validation
+        if (!email || !password || !name) {
+            return res.status(400).json({
+                error: 'Email, password e nome são obrigatórios'
+            });
+        }
+
+        // Password validation
+        if (password.length < 6) {
+            return res.status(400).json({
+                error: 'A password deve ter pelo menos 6 caracteres'
+            });
+        }
 
         // Check if user already exists
         const existingUser = await pool.query(
@@ -25,14 +32,12 @@ router.post('/register', [validateEmail, validateName, validatePassword], async 
 
         if (existingUser.rows.length > 0) {
             return res.status(400).json({
-                error: 'Email already registered',
-                code: 'EMAIL_EXISTS'
+                error: 'Email já registado'
             });
         }
 
-        // Hash password with configured salt rounds
-        const saltRounds = securityConfig.password.minLength;
-        const passwordHash = await bcrypt.hash(password, saltRounds);
+        // Hash password
+        const passwordHash = await bcrypt.hash(password, 10);
 
         // Create new user
         const newUser = await pool.query(
@@ -43,12 +48,12 @@ router.post('/register', [validateEmail, validateName, validatePassword], async 
         // Generate JWT token
         const token = jwt.sign(
             { userId: newUser.rows[0].id, email },
-            securityConfig.jwt.secret,
-            { expiresIn: securityConfig.jwt.expiresIn }
+            'health-tracker-secret-key',
+            { expiresIn: '7d' }
         );
 
         res.status(201).json({
-            message: 'User registered successfully',
+            message: 'Utilizador registado com sucesso',
             user: {
                 id: newUser.rows[0].id,
                 email: newUser.rows[0].email,
@@ -60,34 +65,31 @@ router.post('/register', [validateEmail, validateName, validatePassword], async 
     } catch (error) {
         console.error('Registration error:', error);
         res.status(500).json({
-            error: 'Internal server error',
-            code: 'REGISTRATION_ERROR'
+            error: 'Erro interno do servidor'
         });
     }
 });
 
-// Login user
-router.post('/login', [validateEmail], async (req, res) => {
+// Simple login route without middleware
+router.post('/login', async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        if (!password) {
+        if (!email || !password) {
             return res.status(400).json({
-                error: 'Password is required',
-                code: 'MISSING_PASSWORD'
+                error: 'Email e password são obrigatórios'
             });
         }
 
         // Find user by email
         const user = await pool.query(
-            'SELECT id, email, name, password_hash FROM users WHERE email = $1',
+            'SELECT id, email, name, password_hash, get_user_role(id) as role FROM users WHERE email = $1',
             [email]
         );
 
         if (user.rows.length === 0) {
             return res.status(401).json({
-                error: 'Invalid email or password',
-                code: 'INVALID_CREDENTIALS'
+                error: 'Email ou password inválidos'
             });
         }
 
@@ -98,24 +100,24 @@ router.post('/login', [validateEmail], async (req, res) => {
 
         if (!isValidPassword) {
             return res.status(401).json({
-                error: 'Invalid email or password',
-                code: 'INVALID_CREDENTIALS'
+                error: 'Email ou password inválidos'
             });
         }
 
         // Generate JWT token
         const token = jwt.sign(
-            { userId: userData.id, email: userData.email },
-            securityConfig.jwt.secret,
-            { expiresIn: securityConfig.jwt.expiresIn }
+            { userId: userData.id, email: userData.email, role: userData.role },
+            'health-tracker-secret-key',
+            { expiresIn: '7d' }
         );
 
         res.json({
-            message: 'Login successful',
+            message: 'Login realizado com sucesso',
             user: {
                 id: userData.id,
                 email: userData.email,
-                name: userData.name
+                name: userData.name,
+                role: userData.role
             },
             token
         });
@@ -123,213 +125,60 @@ router.post('/login', [validateEmail], async (req, res) => {
     } catch (error) {
         console.error('Login error:', error);
         res.status(500).json({
-            error: 'Internal server error',
-            code: 'LOGIN_ERROR'
+            error: 'Erro interno do servidor'
         });
     }
 });
 
-// Get current user
+// Middleware to verify JWT token
+const authenticateToken = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) {
+        return res.status(401).json({ error: 'Token de acesso obrigatório' });
+    }
+
+    jwt.verify(token, 'health-tracker-secret-key', (err, user) => {
+        if (err) {
+            return res.status(403).json({ error: 'Token inválido ou expirado' });
+        }
+        req.user = user;
+        next();
+    });
+};
+
+// Get current user info
 router.get('/me', authenticateToken, async (req, res) => {
     try {
-        res.json({
-            user: req.user
-        });
-    } catch (error) {
-        console.error('Get current user error:', error);
-        res.status(500).json({
-            error: 'Internal server error',
-            code: 'GET_USER_ERROR'
-        });
-    }
-});
-
-// Logout (client-side token removal)
-router.post('/logout', authenticateToken, async (req, res) => {
-    // In a real application, you might want to implement token blacklisting
-    // For now, we'll just return success as the client will remove the token
-    res.json({
-        message: 'Logout successful'
-    });
-});
-
-// Change password
-router.post('/change-password', [authenticateToken, validatePassword], async (req, res) => {
-    try {
-        const { currentPassword, newPassword } = req.body;
-
-        // Get current user with password hash
-        const user = await pool.query(
-            'SELECT password_hash FROM users WHERE id = $1',
-            [req.user.id]
-        );
-
-        if (user.rows.length === 0) {
-            return res.status(404).json({
-                error: 'User not found',
-                code: 'USER_NOT_FOUND'
-            });
-        }
-
-        // Verify current password
-        const isValidPassword = await bcrypt.compare(currentPassword, user.rows[0].password_hash);
-
-        if (!isValidPassword) {
-            return res.status(401).json({
-                error: 'Current password is incorrect',
-                code: 'INVALID_CURRENT_PASSWORD'
-            });
-        }
-
-        // Hash new password
-        const saltRounds = securityConfig.password.minLength;
-        const newPasswordHash = await bcrypt.hash(newPassword, saltRounds);
-
-        // Update password
-        await pool.query(
-            'UPDATE users SET password_hash = $1 WHERE id = $2',
-            [newPasswordHash, req.user.id]
-        );
-
-        res.json({
-            message: 'Password changed successfully'
-        });
-
-    } catch (error) {
-        console.error('Change password error:', error);
-        res.status(500).json({
-            error: 'Internal server error',
-            code: 'CHANGE_PASSWORD_ERROR'
-        });
-    }
-});
-
-// Forgot password (send reset email)
-router.post('/forgot-password', [validateEmail], async (req, res) => {
-    try {
-        const { email } = req.body;
-
-        // Check if user exists
-        const user = await pool.query(
-            'SELECT id, name FROM users WHERE email = $1',
-            [email]
-        );
-
-        if (user.rows.length === 0) {
-            // Don't reveal if email exists or not for security
-            return res.json({
-                message: 'If the email exists, a reset link has been sent'
-            });
-        }
-
-        // Generate reset token (shorter expiry for security)
-        const resetToken = jwt.sign(
-            { userId: user.rows[0].id, email, type: 'password_reset' },
-            securityConfig.jwt.secret,
-            { expiresIn: '1h' }
-        );
-
-        // In a real application, you would send an email here
-        // For now, we'll just log the token
-        console.log(`Password reset token for ${email}: ${resetToken}`);
-
-        res.json({
-            message: 'If the email exists, a reset link has been sent'
-        });
-
-    } catch (error) {
-        console.error('Forgot password error:', error);
-        res.status(500).json({
-            error: 'Internal server error',
-            code: 'FORGOT_PASSWORD_ERROR'
-        });
-    }
-});
-
-// Reset password with token
-router.post('/reset-password', [validatePassword], async (req, res) => {
-    try {
-        const { token, newPassword } = req.body;
-
-        if (!token) {
-            return res.status(400).json({
-                error: 'Reset token is required',
-                code: 'MISSING_TOKEN'
-            });
-        }
-
-        // Verify reset token
-        const decoded = jwt.verify(token, securityConfig.jwt.secret);
+        const userId = req.user.userId;
         
-        if (decoded.type !== 'password_reset') {
-            return res.status(400).json({
-                error: 'Invalid reset token',
-                code: 'INVALID_RESET_TOKEN'
-            });
-        }
-
-        // Check if user exists
         const user = await pool.query(
-            'SELECT id FROM users WHERE id = $1',
-            [decoded.userId]
+            'SELECT id, email, name, created_at, get_user_role(id) as role FROM users WHERE id = $1',
+            [userId]
         );
 
         if (user.rows.length === 0) {
-            return res.status(404).json({
-                error: 'User not found',
-                code: 'USER_NOT_FOUND'
-            });
+            return res.status(404).json({ error: 'Utilizador não encontrado' });
         }
 
-        // Hash new password
-        const saltRounds = securityConfig.password.minLength;
-        const newPasswordHash = await bcrypt.hash(newPassword, saltRounds);
-
-        // Update password
-        await pool.query(
-            'UPDATE users SET password_hash = $1 WHERE id = $2',
-            [newPasswordHash, decoded.userId]
-        );
-
         res.json({
-            message: 'Password reset successfully'
+            success: true,
+            data: {
+                user: {
+                    id: user.rows[0].id,
+                    email: user.rows[0].email,
+                    name: user.rows[0].name,
+                    role: user.rows[0].role,
+                    created_at: user.rows[0].created_at
+                }
+            }
         });
 
     } catch (error) {
-        if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
-            return res.status(400).json({
-                error: 'Invalid or expired reset token',
-                code: 'INVALID_RESET_TOKEN'
-            });
-        }
-
-        console.error('Reset password error:', error);
+        console.error('Get user info error:', error);
         res.status(500).json({
-            error: 'Internal server error',
-            code: 'RESET_PASSWORD_ERROR'
-        });
-    }
-});
-
-// Refresh token (optional - for longer sessions)
-router.post('/refresh-token', authenticateToken, async (req, res) => {
-    try {
-        // Generate new token with same user info
-        const token = jwt.sign(
-            { userId: req.user.id, email: req.user.email },
-            securityConfig.jwt.secret,
-            { expiresIn: securityConfig.jwt.expiresIn }
-        );
-
-        res.json({
-            token
-        });
-
-    } catch (error) {
-        console.error('Refresh token error:', error);
-        res.status(500).json({
-            error: 'Internal server error',
-            code: 'REFRESH_TOKEN_ERROR'
+            error: 'Erro interno do servidor'
         });
     }
 });

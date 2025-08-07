@@ -32,9 +32,21 @@ export class AuthService {
                     this.isAuthenticated = true;
                     this.token = token;
                     
+                    // Check if we have a UserActive set
+                    const userActive = localStorage.getItem('userActive');
+                    let profileEndpoint = '/api/users/profile';
+                    
+                    if (userActive) {
+                        // Use the specific user endpoint if we have a UserActive
+                        profileEndpoint = `/api/users/${userActive}/profile`;
+                        console.log('Using UserActive endpoint for profile:', profileEndpoint);
+                    } else {
+                        console.log('Using authenticated user endpoint for profile:', profileEndpoint);
+                    }
+                    
                     // Now fetch complete profile with all fields
                     try {
-                        const profileResponse = await this.databaseService.makeRequest('/api/users/profile', {
+                        const profileResponse = await this.databaseService.makeRequest(profileEndpoint, {
                             method: 'GET',
                             headers: {
                                 'Authorization': `Bearer ${token}`
@@ -242,7 +254,19 @@ export class AuthService {
                 throw new Error('Utilizador não autenticado');
             }
 
-            const response = await this.databaseService.makeRequest('/api/users/profile', {
+            // Check if we have a UserActive set
+            const userActive = localStorage.getItem('userActive');
+            let profileEndpoint = '/api/users/profile';
+            
+            if (userActive) {
+                // Use the specific user endpoint if we have a UserActive
+                profileEndpoint = `/api/users/${userActive}/profile`;
+                console.log('Using UserActive endpoint for profile update:', profileEndpoint);
+            } else {
+                console.log('Using authenticated user endpoint for profile update:', profileEndpoint);
+            }
+
+            const response = await this.databaseService.makeRequest(profileEndpoint, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',

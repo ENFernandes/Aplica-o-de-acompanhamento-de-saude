@@ -33,47 +33,6 @@
                     </div>
                     
                     <div class="flex items-center space-x-4">
-                        <!-- Go to Main App -->
-                        <div class="relative">
-                            <button id="go-to-main-app" class="px-3 py-2 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors duration-200">
-                                📱 App Principal
-                            </button>
-                        </div>
-                        
-                        <!-- Notifications -->
-                        <div class="relative">
-                            <button id="notifications-btn" class="p-2 text-gray-400 hover:text-gray-600 relative">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5zM10.5 3.75a6 6 0 00-6 6v3.75l-.75.75h13.5l-.75-.75V9.75a6 6 0 00-6-6z"></path>
-                                </svg>
-                                <span id="notification-badge" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center hidden">0</span>
-                            </button>
-                            
-                            <!-- Notifications Panel -->
-                            <div id="notifications-panel" class="absolute right-0 mt-2 w-80 bg-white rounded-md shadow-lg border border-gray-200 z-50 hidden">
-                                <div class="p-4">
-                                    <h3 class="text-lg font-medium text-gray-900 mb-3">🔔 Notificações</h3>
-                                    <div class="space-y-3">
-                                        <div class="p-3 bg-blue-50 rounded-md">
-                                            <p class="text-sm text-blue-800">Sistema funcionando normalmente</p>
-                                            <span class="text-xs text-blue-600">Há 5 minutos</span>
-                                        </div>
-                                        <div class="p-3 bg-green-50 rounded-md">
-                                            <p class="text-sm text-green-800">2 novos utilizadores registados</p>
-                                            <span class="text-xs text-green-600">Há 1 hora</span>
-                                        </div>
-                                        <div class="p-3 bg-yellow-50 rounded-md">
-                                            <p class="text-sm text-yellow-800">Base de dados com 95% capacidade</p>
-                                            <span class="text-xs text-yellow-600">Há 3 horas</span>
-                                        </div>
-                                    </div>
-                                    <div class="mt-4 pt-3 border-t border-gray-200">
-                                        <button class="text-sm text-blue-600 hover:text-blue-800">Ver todas as notificações</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
                         <!-- Admin Profile -->
                         <div class="relative">
                             <button id="admin-profile-btn" class="flex items-center space-x-2 text-gray-700 hover:text-gray-900">
@@ -103,9 +62,6 @@
                     </button>
                     <button id="nav-data" class="nav-item" data-section="data">
                         📋 Dados
-                    </button>
-                    <button id="nav-analytics" class="nav-item" data-section="analytics">
-                        📈 Analytics
                     </button>
                     <button id="nav-settings" class="nav-item" data-section="settings">
                         ⚙️ Configurações
@@ -322,45 +278,6 @@
                 </div>
             </section>
 
-            <!-- Analytics Section -->
-            <section id="analytics-section" class="admin-section hidden">
-                <div class="mb-8">
-                    <h2 class="text-2xl font-bold text-gray-900 mb-2">Analytics Detalhados</h2>
-                    <p class="text-gray-600">Análise avançada de dados e tendências</p>
-                </div>
-
-                <!-- Analytics Charts -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    <div class="bg-white rounded-lg shadow p-6">
-                        <h3 class="text-lg font-medium text-gray-900 mb-4">Distribuição de IMC</h3>
-                        <div class="chart-container">
-                            <canvas id="bmi-distribution-chart"></canvas>
-                        </div>
-                    </div>
-
-                    <div class="bg-white rounded-lg shadow p-6">
-                        <h3 class="text-lg font-medium text-gray-900 mb-4">Evolução de Peso por Utilizador</h3>
-                        <div class="chart-container">
-                            <canvas id="weight-evolution-chart"></canvas>
-                        </div>
-                    </div>
-
-                    <div class="bg-white rounded-lg shadow p-6">
-                        <h3 class="text-lg font-medium text-gray-900 mb-4">Atividade por Hora</h3>
-                        <div class="chart-container">
-                            <canvas id="activity-chart"></canvas>
-                        </div>
-                    </div>
-
-                    <div class="bg-white rounded-lg shadow p-6">
-                        <h3 class="text-lg font-medium text-gray-900 mb-4">Top Utilizadores</h3>
-                        <div class="chart-container">
-                            <canvas id="top-users-chart"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
             <!-- Settings Section -->
             <section id="settings-section" class="admin-section hidden">
                 <div class="mb-8">
@@ -474,7 +391,6 @@
     <script type="module" src="js/adminDashboard.js"></script>
     <script type="module" src="js/userManagement.js"></script>
     <script type="module" src="js/dataManagement.js"></script>
-    <script type="module" src="js/adminAnalytics.js"></script>
     <script type="module" src="js/adminSettings.js"></script>
     <script type="module" src="js/adminNotifications.js"></script>
 </body>

@@ -179,8 +179,9 @@ export class UserManagementService {
             return;
         }
 
-        // Store user data in localStorage for the main app to use
-        localStorage.setItem('selected-user-profile', JSON.stringify(user));
+        // Set this user as the active user using the UserActive system
+        localStorage.setItem('userActive', userId);
+        console.log('UserActive set to:', userId);
         
         // Redirect to main app
         window.location.href = '../index.html';

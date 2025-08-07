@@ -120,7 +120,19 @@ export class UIService {
             const token = localStorage.getItem('auth-token');
             if (!token) return;
             
-            const response = await fetch('http://localhost:3000/api/users/profile', {
+            // Check if we have a UserActive set
+            const userActive = localStorage.getItem('userActive');
+            let endpoint = 'http://localhost:3000/api/users/profile';
+            
+            if (userActive) {
+                // Use the specific user endpoint if we have a UserActive
+                endpoint = `http://localhost:3000/api/users/${userActive}/profile`;
+                console.log('Using UserActive endpoint:', endpoint);
+            } else {
+                console.log('Using authenticated user endpoint:', endpoint);
+            }
+            
+            const response = await fetch(endpoint, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -138,6 +150,8 @@ export class UIService {
                     // Update age field
                     this.updateAgeFromProfile(user);
                 }
+            } else {
+                console.error('Failed to fetch user data:', response.status);
             }
         } catch (error) {
             console.log('Could not fetch user data:', error);

@@ -50,6 +50,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.log('Importing modules...');
         const { AppService } = await import('./appService.js');
         const { AuthManager } = await import('./authManager.js');
+        const { ProfilePopulatorService } = await import('./profilePopulator.js');
 
         // Initialize auth manager first
         console.log('Initializing AuthManager...');
@@ -60,135 +61,28 @@ document.addEventListener('DOMContentLoaded', async () => {
         globalAppService = new AppService();
         globalAppService.setupEventListeners();
         
-        // ROBUST AUTHENTICATION CHECK
-        console.log('=== ROBUST AUTH CHECK ===');
+        // Initialize profile populator service
+        console.log('Initializing ProfilePopulatorService...');
+        const profilePopulator = new ProfilePopulatorService();
         
-        // Function to validate token without network calls
-        function validateTokenLocally(token) {
-            try {
-                console.log('🔍 Validating token:', !!token);
-                if (!token) {
-                    console.log('❌ No token provided');
-                    return false;
-                }
-                
-                // Check if token has correct format (3 parts)
-                const parts = token.split('.');
-                console.log('Token parts:', parts.length);
-                if (parts.length !== 3) {
-                    console.log('❌ Invalid token format (not 3 parts)');
-                    return false;
-                }
-                
-                // Decode payload
-                const payload = JSON.parse(atob(parts[1]));
-                console.log('Token payload:', payload);
-                
-                // Check expiration
-                const currentTime = Math.floor(Date.now() / 1000);
-                console.log('Current time:', currentTime);
-                console.log('Token expiration:', payload.exp);
-                if (!payload.exp || payload.exp <= currentTime) {
-                    console.log('❌ Token expired or no expiration');
-                    return false;
-                }
-                
-                // Check if token has required fields
-                console.log('Token userId:', payload.userId);
-                console.log('Token email:', payload.email);
-                if (!payload.userId || !payload.email) {
-                    console.log('❌ Token missing required fields');
-                    return false;
-                }
-                
-                console.log('✅ Token validation successful');
-                return true;
-            } catch (error) {
-                console.log('❌ Token validation error:', error);
-                return false;
-            }
-        }
+        // Check authentication status
+        console.log('Checking authentication status...');
+        const authResult = await globalAuthManager.checkAuthStatus();
         
-        // Check token immediately
-        const token = localStorage.getItem('auth-token');
-        console.log('Token exists:', !!token);
-        
-        if (validateTokenLocally(token)) {
-            console.log('✅ Token is valid, initializing app...');
+        if (authResult.isAuthenticated) {
+            console.log('User authenticated, initializing app...');
             
-            // Hide loading indicator and show main content
-            const loadingIndicator = document.getElementById('loading-indicator');
-            const mainContent = document.getElementById('main-content');
-            const appArea = document.getElementById('app-area');
-            
-            console.log('Elements found:', {
-                loadingIndicator: !!loadingIndicator,
-                mainContent: !!mainContent,
-                appArea: !!appArea
-            });
-            
-            if (loadingIndicator) {
-                console.log('Before: Loading indicator hidden =', loadingIndicator.classList.contains('hidden'));
-                loadingIndicator.classList.add('hidden');
-                console.log('After: Loading indicator hidden =', loadingIndicator.classList.contains('hidden'));
-                console.log('Loading indicator hidden');
-            } else {
-                console.log('❌ Loading indicator not found!');
+            // Check if we have a UserActive set (from BackOffice)
+            const userActive = localStorage.getItem('userActive');
+            if (userActive) {
+                console.log('UserActive found:', userActive);
+                // The AuthManager will handle loading the user profile
             }
             
-            if (mainContent) {
-                console.log('Before: Main content hidden =', mainContent.classList.contains('hidden'));
-                mainContent.classList.remove('hidden');
-                console.log('After: Main content hidden =', mainContent.classList.contains('hidden'));
-                console.log('Main content shown');
-            } else {
-                console.log('❌ Main content not found!');
-            }
-            
-            if (appArea) {
-                console.log('Before: App area hidden =', appArea.classList.contains('hidden'));
-                appArea.classList.remove('hidden');
-                console.log('After: App area hidden =', appArea.classList.contains('hidden'));
-                console.log('App area shown');
-            } else {
-                console.log('❌ App area not found!');
-            }
-            
-            // Check auth status and show app with user profile
-            const authResult = await globalAuthManager.checkAuthStatus();
-            if (authResult.isAuthenticated && authResult.user) {
-                console.log('✅ User authenticated, showing app with profile dropdown');
-                globalAuthManager.showApp(authResult.user);
-            } else {
-                console.log('❌ Auth check failed, redirecting to login');
-                localStorage.removeItem('auth-token');
-                window.location.href = 'login.html';
-            }
+            await globalAppService.initialize();
         } else {
-            console.log('❌ Token invalid or missing, redirecting to login...');
-            localStorage.removeItem('auth-token');
-            
-            // Show loading message before redirect
-            const loadingIndicator = document.getElementById('loading-indicator');
-            if (loadingIndicator) {
-                loadingIndicator.innerHTML = `
-                    <div class="text-center">
-                        <div class="text-blue-500 text-6xl mb-4">🔐</div>
-                        <h2 class="text-xl font-bold text-gray-800 mb-2">Verificando autenticação...</h2>
-                        <p class="text-gray-600 mb-4">A redirecionar para a página de login...</p>
-                        <div class="mt-4">
-                            <a href="login.html" class="text-blue-600 hover:text-blue-800 underline">
-                                Clique aqui se não for redirecionado automaticamente
-                            </a>
-                        </div>
-                    </div>
-                `;
-            }
-            
-            // Redirect to login page after a short delay
-            setTimeout(() => {
-                window.location.href = 'login.html';
-            }, 2000);
+            console.log('User not authenticated, redirecting to login...');
+            window.location.href = 'login.html';
         }
         
         console.log('Application initialization complete');
