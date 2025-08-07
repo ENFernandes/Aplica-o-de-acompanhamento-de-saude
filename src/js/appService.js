@@ -1,12 +1,9 @@
 // Main application service
-import { firebaseOperations, authFunctions, useLocalStorage, appId } from './firebaseConfig.js';
-import { LocalStorageService } from './localStorageService.js';
 import { ValidationService } from './validationService.js';
-import { ChartService } from './chartService.js';
-import { SuggestionsService } from './suggestionsService.js';
 import { UIService } from './uiService.js';
 import { AuthManager } from './authManager.js';
-import { initialImageData, tableFields } from '../data/initialData.js';
+import { ChartService } from './chartService.js';
+import { tableFields } from '../data/initialData.js';
 
 export class AppService {
     constructor() {
@@ -16,10 +13,9 @@ export class AppService {
         this.editingRowId = null;
         
         // Initialize services
-        this.localStorageService = new LocalStorageService();
-        this.chartService = new ChartService();
         this.uiService = new UIService();
         this.authManager = new AuthManager();
+        this.chartService = new ChartService();
         
         // Bind methods
         this.handleEditClick = this.handleEditClick.bind(this);
@@ -53,16 +49,6 @@ export class AppService {
     }
 
     async setupAuth() {
-        if (useLocalStorage) {
-            // Local storage mode
-            this.userId = 'local-user-' + Date.now();
-            this.uiService.updateUserIdDisplay(this.userId, true);
-            await this.seedInitialData();
-            await this.loadHealthData();
-            this.uiService.hideLoading();
-            return;
-        }
-
         try {
             // Database mode - load health data from backend
             await this.loadHealthData();
@@ -75,24 +61,10 @@ export class AppService {
     }
 
     async seedInitialData() {
-        if (useLocalStorage) {
-            this.localHealthRecords = this.localStorageService.seedInitialData(initialImageData);
-        } else {
-            const snapshot = await firebaseOperations.getDocuments(this.healthDataCollection);
-            if (snapshot.empty) {
-                for (const record of initialImageData) {
-                    await firebaseOperations.addDocument(this.healthDataCollection, record);
-                }
-            }
-        }
+        console.log('Skipping initial data seeding');
     }
 
     async loadHealthData() {
-        if (useLocalStorage) {
-            this.updateUI();
-            return;
-        }
-
         try {
             const token = localStorage.getItem('auth-token');
             if (!token) {
@@ -112,7 +84,36 @@ export class AppService {
             }
 
             const data = await response.json();
-            this.localHealthRecords = data.records || [];
+            
+            // Convert snake_case field names to camelCase for frontend compatibility
+            this.localHealthRecords = (data.records || []).map(record => {
+                const convertedRecord = { ...record };
+                
+                // Convert field names from snake_case to camelCase
+                const fieldMappings = {
+                    body_fat_percentage: 'bodyFatPercentage',
+                    muscle_mass: 'muscleMass',
+                    bone_mass: 'boneMass',
+                    metabolic_age: 'metabolicAge',
+                    water_percentage: 'waterPercentage',
+                    visceral_fat: 'visceralFat',
+                    fat_right_arm: 'fatRightArm',
+                    fat_left_arm: 'fatLeftArm',
+                    fat_right_leg: 'fatRightLeg',
+                    fat_left_leg: 'fatLeftLeg',
+                    fat_trunk: 'fatTrunk'
+                };
+                
+                Object.keys(fieldMappings).forEach(snakeKey => {
+                    if (convertedRecord.hasOwnProperty(snakeKey)) {
+                        convertedRecord[fieldMappings[snakeKey]] = convertedRecord[snakeKey];
+                        delete convertedRecord[snakeKey];
+                    }
+                });
+                
+                return convertedRecord;
+            });
+            
             this.updateUI();
             console.log('Health records loaded:', this.localHealthRecords.length);
         } catch (error) {
@@ -129,11 +130,14 @@ export class AppService {
             this.handleSaveClick, 
             this.handleDeleteClick
         );
-        this.chartService.updateCharts(this.localHealthRecords);
         
-        const suggestions = SuggestionsService.generateSuggestions(this.localHealthRecords[0]);
-        const suggestionsContainer = document.getElementById('suggestions-container');
-        SuggestionsService.renderSuggestions(suggestions, suggestionsContainer);
+        // Initialize and update charts with a small delay to ensure DOM is ready
+        setTimeout(() => {
+            this.chartService.initializeCharts();
+            this.chartService.updateCharts(this.localHealthRecords);
+        }, 100);
+        
+        console.log('UI updated with', this.localHealthRecords.length, 'records');
     }
 
     async handleFormSubmit(e) {
@@ -156,34 +160,29 @@ export class AppService {
         }
 
         try {
-            if (useLocalStorage) {
-                const newRecord = this.localStorageService.addRecord(data);
-                this.localHealthRecords.unshift(newRecord);
-            } else {
-                // Send to backend API
-                const token = localStorage.getItem('auth-token');
-                if (!token) {
-                    this.uiService.showToast("Erro: Não está autenticado.");
-                    return;
-                }
-
-                const response = await fetch('http://localhost:3000/api/health-records', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify(data)
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || 'Erro ao guardar no servidor');
-                }
-
-                const result = await response.json();
-                console.log('Health record saved successfully:', result);
+            // Send to backend API
+            const token = localStorage.getItem('auth-token');
+            if (!token) {
+                this.uiService.showToast("Erro: Não está autenticado.");
+                return;
             }
+
+            const response = await fetch('http://localhost:3000/api/health-records', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(data)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Erro ao guardar no servidor');
+            }
+
+            const result = await response.json();
+            console.log('Health record saved successfully:', result);
 
             await this.uiService.resetForm();
             this.uiService.showToast("Novo registo guardado com sucesso!", false);
@@ -230,43 +229,38 @@ export class AppService {
         }
 
         try {
-            if (useLocalStorage) {
-                this.localStorageService.updateRecord(docId, updatedData);
-                this.localHealthRecords = this.localStorageService.getAllRecords();
-            } else {
-                // Send update request to backend API
-                const token = localStorage.getItem('auth-token');
-                if (!token) {
-                    this.uiService.showToast("Erro: Não está autenticado.");
-                    return;
-                }
-
-                const response = await fetch(`http://localhost:3000/api/health-records/${docId}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify(updatedData)
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || 'Erro ao atualizar no servidor');
-                }
-
-                const result = await response.json();
-                console.log('Health record updated successfully:', result);
+            // Send update request to backend API
+            const token = localStorage.getItem('auth-token');
+            if (!token) {
+                this.uiService.showToast("Erro: Não está autenticado.");
+                return;
             }
+
+            const response = await fetch(`http://localhost:3000/api/health-records/${docId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(updatedData)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Erro ao atualizar no servidor');
+            }
+
+            const result = await response.json();
+            console.log('Health record updated successfully:', result);
             
             this.uiService.showToast("Registo atualizado com sucesso!", false);
+            // Exit edit mode
+            this.editingRowId = null;
             // Refresh the data after successful update
             await this.loadHealthData();
         } catch (error) {
             console.error('Error updating health record:', error);
             this.uiService.showToast(`Não foi possível guardar as alterações: ${error.message}`);
-        } finally {
-            this.editingRowId = null;
         }
     }
 
@@ -277,27 +271,23 @@ export class AppService {
             }
             
             try {
-                if (useLocalStorage) {
-                    this.localHealthRecords = this.localStorageService.deleteRecord(docId);
-                } else {
-                    // Send delete request to backend API
-                    const token = localStorage.getItem('auth-token');
-                    if (!token) {
-                        this.uiService.showToast("Erro: Não está autenticado.");
-                        return;
-                    }
+                // Send delete request to backend API
+                const token = localStorage.getItem('auth-token');
+                if (!token) {
+                    this.uiService.showToast("Erro: Não está autenticado.");
+                    return;
+                }
 
-                    const response = await fetch(`http://localhost:3000/api/health-records/${docId}`, {
-                        method: 'DELETE',
-                        headers: {
-                            'Authorization': `Bearer ${token}`
-                        }
-                    });
-
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(errorData.error || 'Erro ao eliminar no servidor');
+                const response = await fetch(`http://localhost:3000/api/health-records/${docId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
                     }
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Erro ao eliminar no servidor');
                 }
                 
                 this.uiService.showToast("Registo eliminado.", false);

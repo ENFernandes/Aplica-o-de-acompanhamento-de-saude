@@ -24,7 +24,21 @@ export class DatabaseService {
             console.log(`Making request to: ${url}`, requestOptions);
 
             const response = await fetch(url, requestOptions);
-            const data = await response.json();
+            
+            // Handle non-JSON responses (like rate limit errors)
+            let data;
+            const responseText = await response.text(); // Read response body once
+            
+            try {
+                data = JSON.parse(responseText);
+            } catch (error) {
+                // If response is not JSON, return the text
+                return {
+                    success: false,
+                    error: responseText || 'Request failed',
+                    status: response.status
+                };
+            }
 
             if (!response.ok) {
                 return {

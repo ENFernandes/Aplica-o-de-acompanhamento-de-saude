@@ -7,6 +7,7 @@ require('dotenv').config();
 const authRoutes = require('./routes/auth_simple');
 const healthRecordsRoutes = require('./routes/healthRecords');
 const usersRoutes = require('./routes/users_simple');
+const adminRoutes = require('./routes/admin');
 const { testDatabaseConnection } = require('./config/database');
 
 const app = express();
@@ -21,10 +22,10 @@ app.use(cors({
     credentials: true
 }));
 
-// Rate limiting
+// Rate limiting - temporarily disabled for debugging
 const limiter = rateLimit({
     windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes
-    max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100, // limit each IP to 100 requests per windowMs
+    max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 10000, // temporarily increased to 10000 requests per windowMs
     message: 'Too many requests from this IP, please try again later.'
 });
 app.use('/api/', limiter);
@@ -55,6 +56,7 @@ app.get('/api/health', async (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/health-records', healthRecordsRoutes);
 app.use('/api/users', usersRoutes);
+app.use('/api/admin', adminRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {

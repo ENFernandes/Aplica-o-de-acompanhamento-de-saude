@@ -2,7 +2,7 @@
 export class ValidationService {
     static validateRecord(record) {
         const errors = [];
-        const { weight, height, bmi, bodyFatPercentage, bodyFatKg, muscleMass, boneMass } = record;
+        const { weight, height, bmi, bodyFatPercentage, muscleMass, boneMass } = record;
         
         // Validate BMI calculation
         if (weight && height && bmi) {
@@ -15,20 +15,9 @@ export class ValidationService {
             }
         }
         
-        // Validate body fat percentage calculation
-        if (weight && bodyFatKg && bodyFatPercentage) {
-            const expectedPercentage = (bodyFatKg / weight) * 100;
-            if (Math.abs(bodyFatPercentage - expectedPercentage) > 1.0) {
-                errors.push({ 
-                    field: 'bodyFatPercentage', 
-                    message: `% Gordura (${bodyFatPercentage.toFixed(1)}%) inconsistente. Esperado ~${expectedPercentage.toFixed(1)}%.` 
-                });
-            }
-        }
-        
         // Validate component mass sum
-        if (weight && bodyFatKg && muscleMass && boneMass) {
-            const componentMass = bodyFatKg + muscleMass + boneMass;
+        if (weight && muscleMass && boneMass) {
+            const componentMass = muscleMass + boneMass;
             if (componentMass > weight + 1) {
                 errors.push({ 
                     field: 'weight', 
@@ -54,7 +43,7 @@ export class ValidationService {
         });
         
         // Validate numeric fields
-        const numericFields = ['weight', 'height', 'age', 'bodyFatPercentage', 'muscleMass', 'bmi', 'visceralFat', 'waterPercentage', 'metabolicAge', 'bodyFatKg', 'boneMass'];
+        const numericFields = ['weight', 'height', 'age', 'bodyFatPercentage', 'muscleMass', 'bmi', 'visceralFat', 'waterPercentage', 'metabolicAge', 'boneMass'];
         numericFields.forEach(field => {
             if (formData[field] && isNaN(parseFloat(formData[field]))) {
                 errors.push({ 
@@ -68,11 +57,35 @@ export class ValidationService {
     }
 
     static formatDisplayValue(value, field) {
-        if (value == null || value === '') return '0.0';
+        if (value == null || value === '') {
+            if (field === 'date') return '';
+            return '0.0';
+        }
         
         switch(field) {
             case 'date':
-                return new Date(value + 'T00:00:00').toLocaleDateString('pt-BR');
+                try {
+                    // Handle different date formats
+                    let dateValue = value;
+                    if (typeof value === 'string') {
+                        // If it's already a date string, use it directly
+                        if (value.includes('T')) {
+                            dateValue = value;
+                        } else {
+                            // Add time if it's just a date
+                            dateValue = value + 'T00:00:00';
+                        }
+                    }
+                    const date = new Date(dateValue);
+                    if (isNaN(date.getTime())) {
+                        console.error('Invalid date value:', value);
+                        return '';
+                    }
+                    return date.toLocaleDateString('pt-BR');
+                } catch (error) {
+                    console.error('Error formatting date:', error, 'Value:', value);
+                    return '';
+                }
             case 'weight':
             case 'muscleMass':
                 return `${parseFloat(value).toFixed(1)} kg`;
@@ -96,7 +109,7 @@ export class ValidationService {
             return value;
         }
         
-        const numericFields = ['weight', 'bodyFatPercentage', 'muscleMass', 'bmi', 'visceralFat', 'waterPercentage', 'metabolicAge', 'bodyFatKg', 'boneMass'];
+        const numericFields = ['weight', 'bodyFatPercentage', 'muscleMass', 'bmi', 'visceralFat', 'waterPercentage', 'metabolicAge', 'boneMass'];
         if (numericFields.includes(field)) {
             const numValue = parseFloat(value);
             return isNaN(numValue) ? null : numValue;

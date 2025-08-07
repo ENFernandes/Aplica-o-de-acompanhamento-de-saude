@@ -13,7 +13,14 @@ router.post('/register', async (req, res) => {
         // Basic validation
         if (!email || !password || !name) {
             return res.status(400).json({
-                error: 'Email, password, and name are required'
+                error: 'Email, password e nome são obrigatórios'
+            });
+        }
+
+        // Password validation
+        if (password.length < 6) {
+            return res.status(400).json({
+                error: 'A password deve ter pelo menos 6 caracteres'
             });
         }
 
@@ -25,7 +32,7 @@ router.post('/register', async (req, res) => {
 
         if (existingUser.rows.length > 0) {
             return res.status(400).json({
-                error: 'Email already registered'
+                error: 'Email já registado'
             });
         }
 
@@ -46,7 +53,7 @@ router.post('/register', async (req, res) => {
         );
 
         res.status(201).json({
-            message: 'User registered successfully',
+            message: 'Utilizador registado com sucesso',
             user: {
                 id: newUser.rows[0].id,
                 email: newUser.rows[0].email,
@@ -58,7 +65,7 @@ router.post('/register', async (req, res) => {
     } catch (error) {
         console.error('Registration error:', error);
         res.status(500).json({
-            error: 'Internal server error'
+            error: 'Erro interno do servidor'
         });
     }
 });
@@ -70,19 +77,19 @@ router.post('/login', async (req, res) => {
 
         if (!email || !password) {
             return res.status(400).json({
-                error: 'Email and password are required'
+                error: 'Email e password são obrigatórios'
             });
         }
 
         // Find user by email
         const user = await pool.query(
-            'SELECT id, email, name, password_hash FROM users WHERE email = $1',
+            'SELECT id, email, name, password_hash, get_user_role(id) as role FROM users WHERE email = $1',
             [email]
         );
 
         if (user.rows.length === 0) {
             return res.status(401).json({
-                error: 'Invalid email or password'
+                error: 'Email ou password inválidos'
             });
         }
 
@@ -93,7 +100,7 @@ router.post('/login', async (req, res) => {
 
         if (!isValidPassword) {
             return res.status(401).json({
-                error: 'Invalid email or password'
+                error: 'Email ou password inválidos'
             });
         }
 
@@ -105,11 +112,12 @@ router.post('/login', async (req, res) => {
         );
 
         res.json({
-            message: 'Login successful',
+            message: 'Login realizado com sucesso',
             user: {
                 id: userData.id,
                 email: userData.email,
-                name: userData.name
+                name: userData.name,
+                role: userData.role
             },
             token
         });
@@ -117,7 +125,60 @@ router.post('/login', async (req, res) => {
     } catch (error) {
         console.error('Login error:', error);
         res.status(500).json({
-            error: 'Internal server error'
+            error: 'Erro interno do servidor'
+        });
+    }
+});
+
+// Middleware to verify JWT token
+const authenticateToken = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) {
+        return res.status(401).json({ error: 'Token de acesso obrigatório' });
+    }
+
+    jwt.verify(token, 'health-tracker-secret-key', (err, user) => {
+        if (err) {
+            return res.status(403).json({ error: 'Token inválido ou expirado' });
+        }
+        req.user = user;
+        next();
+    });
+};
+
+// Get current user info
+router.get('/me', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        
+        const user = await pool.query(
+            'SELECT id, email, name, created_at, get_user_role(id) as role FROM users WHERE id = $1',
+            [userId]
+        );
+
+        if (user.rows.length === 0) {
+            return res.status(404).json({ error: 'Utilizador não encontrado' });
+        }
+
+        res.json({
+            success: true,
+            data: {
+                user: {
+                    id: user.rows[0].id,
+                    email: user.rows[0].email,
+                    name: user.rows[0].name,
+                    role: user.rows[0].role,
+                    created_at: user.rows[0].created_at
+                }
+            }
+        });
+
+    } catch (error) {
+        console.error('Get user info error:', error);
+        res.status(500).json({
+            error: 'Erro interno do servidor'
         });
     }
 });

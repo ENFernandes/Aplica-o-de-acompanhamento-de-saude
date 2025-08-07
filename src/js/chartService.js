@@ -1,137 +1,276 @@
-// Chart service for rendering and managing charts
+// Chart service for health data visualization
 export class ChartService {
     constructor() {
         this.charts = {};
+        this.isInitialized = false;
     }
 
-    renderLineChart(canvasId, labels, datasets, title) {
-        const ctx = document.getElementById(canvasId)?.getContext('2d');
-        if (!ctx) return;
+    // Initialize all charts
+    initializeCharts() {
+        if (this.isInitialized) return;
         
-        if (this.charts[canvasId]) {
-            this.charts[canvasId].destroy();
+        console.log('Initializing charts...');
+        console.log('Chart object available:', typeof Chart !== 'undefined');
+        
+        try {
+            this.createWeightBmiChart();
+            this.createCompositionChart();
+            this.createFatDistributionChart();
+            this.isInitialized = true;
+            console.log('Charts initialized successfully');
+        } catch (error) {
+            console.error('Error initializing charts:', error);
         }
-        
-        this.charts[canvasId] = new Chart(ctx, {
+    }
+
+    // Create weight and BMI chart
+    createWeightBmiChart() {
+        const canvas = document.getElementById('weightBmiChart');
+        console.log('Looking for weightBmiChart canvas:', canvas);
+        if (!canvas) {
+            console.warn('Weight/BMI chart canvas not found');
+            return;
+        }
+
+        const ctx = canvas.getContext('2d');
+        this.charts.weightBmi = new Chart(ctx, {
             type: 'line',
-            data: { labels, datasets },
+            data: {
+                labels: [],
+                datasets: [
+                    {
+                        label: 'Peso (kg)',
+                        data: [],
+                        borderColor: 'rgb(59, 130, 246)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.4,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: 'IMC',
+                        data: [],
+                        borderColor: 'rgb(239, 68, 68)',
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                        tension: 0.4,
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: {
-                    title: {
-                        display: true,
-                        text: title,
-                        font: { size: 16 }
-                    },
-                    legend: { position: 'top' }
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
                 },
                 scales: {
-                    y: { beginAtZero: false }
+                    x: {
+                        display: true,
+                        title: {
+                            display: true,
+                            text: 'Data'
+                        }
+                    },
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        title: {
+                            display: true,
+                            text: 'Peso (kg)'
+                        }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        title: {
+                            display: true,
+                            text: 'IMC'
+                        },
+                        grid: {
+                            drawOnChartArea: false,
+                        },
+                    }
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Evolução do Peso e IMC'
+                    }
                 }
             }
         });
     }
 
-    renderRadarChart(canvasId, labels, dataset, title) {
-        const ctx = document.getElementById(canvasId)?.getContext('2d');
-        if (!ctx) return;
-        
-        if (this.charts[canvasId]) {
-            this.charts[canvasId].destroy();
+    // Create body composition chart
+    createCompositionChart() {
+        const canvas = document.getElementById('compositionChart');
+        if (!canvas) {
+            console.warn('Composition chart canvas not found');
+            return;
         }
-        
-        this.charts[canvasId] = new Chart(ctx, {
-            type: 'radar',
-            data: { labels, datasets: [dataset] },
+
+        const ctx = canvas.getContext('2d');
+        this.charts.composition = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Massa Gorda', 'Massa Muscular', 'Água Corporal'],
+                datasets: [{
+                    data: [0, 0, 0],
+                    backgroundColor: [
+                        'rgba(239, 68, 68, 0.8)',
+                        'rgba(59, 130, 246, 0.8)',
+                        'rgba(34, 197, 94, 0.8)'
+                    ],
+                    borderColor: [
+                        'rgb(239, 68, 68)',
+                        'rgb(59, 130, 246)',
+                        'rgb(34, 197, 94)'
+                    ],
+                    borderWidth: 2
+                }]
+            },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
                     title: {
                         display: true,
-                        text: title,
-                        font: { size: 16 }
+                        text: 'Composição Corporal'
                     },
-                    legend: { display: false }
-                },
-                elements: {
-                    line: { borderWidth: 3 }
+                    legend: {
+                        position: 'bottom'
+                    }
                 }
             }
         });
     }
 
-    updateCharts(records) {
-        if (!records || records.length === 0) return;
-        
-        const chronologicalRecords = [...records].reverse();
-        const labels = chronologicalRecords.map(r => 
-            new Date(r.date + 'T00:00:00').toLocaleDateString('pt-BR')
-        );
-        
-        // Weight and BMI chart
-        const weightData = chronologicalRecords.map(r => r.weight);
-        const bmiData = chronologicalRecords.map(r => r.bmi);
-        this.renderLineChart('weightBmiChart', labels, [
-            { 
-                label: 'Peso (kg)', 
-                data: weightData, 
-                borderColor: 'rgb(59, 130, 246)', 
-                backgroundColor: 'rgba(59, 130, 246, 0.5)' 
-            }, 
-            { 
-                label: 'IMC', 
-                data: bmiData, 
-                borderColor: 'rgb(239, 68, 68)', 
-                backgroundColor: 'rgba(239, 68, 68, 0.5)' 
+    // Create fat distribution chart
+    createFatDistributionChart() {
+        const canvas = document.getElementById('fatDistributionChart');
+        if (!canvas) {
+            console.warn('Fat distribution chart canvas not found');
+            return;
+        }
+
+        const ctx = canvas.getContext('2d');
+        this.charts.fatDistribution = new Chart(ctx, {
+            type: 'radar',
+            data: {
+                labels: ['Gordura Visceral', 'Gordura Subcutânea', 'Gordura Total'],
+                datasets: [{
+                    label: 'Distribuição de Gordura',
+                    data: [0, 0, 0],
+                    backgroundColor: 'rgba(239, 68, 68, 0.2)',
+                    borderColor: 'rgb(239, 68, 68)',
+                    borderWidth: 2,
+                    pointBackgroundColor: 'rgb(239, 68, 68)',
+                    pointBorderColor: '#fff',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: 'rgb(239, 68, 68)'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Distribuição de Gordura'
+                    }
+                },
+                scales: {
+                    r: {
+                        beginAtZero: true,
+                        max: 100
+                    }
+                }
             }
-        ], 'Evolução do Peso e IMC');
-        
-        // Body composition chart
-        const bodyFatData = chronologicalRecords.map(r => r.bodyFatPercentage);
-        const muscleMassData = chronologicalRecords.map(r => r.muscleMass);
-        this.renderLineChart('compositionChart', labels, [
-            { 
-                label: '% Gordura Corporal', 
-                data: bodyFatData, 
-                borderColor: 'rgb(249, 115, 22)', 
-                backgroundColor: 'rgba(249, 115, 22, 0.5)' 
-            }, 
-            { 
-                label: 'Massa Muscular (kg)', 
-                data: muscleMassData, 
-                borderColor: 'rgb(22, 163, 74)', 
-                backgroundColor: 'rgba(22, 163, 74, 0.5)' 
-            }
-        ], 'Composição Corporal');
-        
-        // Fat distribution radar chart
-        const latestRecord = records[0];
-        const fatDistributionData = [
-            latestRecord.fatRightArm, 
-            latestRecord.fatLeftArm, 
-            latestRecord.fatRightLeg, 
-            latestRecord.fatLeftLeg, 
-            latestRecord.fatTrunk
-        ].map(v => v || 0);
-        
-        this.renderRadarChart('fatDistributionChart', 
-            ['Braço Direito', 'Braço Esquerdo', 'Perna Direita', 'Perna Esquerda', 'Tronco'], 
-            { 
-                label: '% Gordura', 
-                data: fatDistributionData, 
-                borderColor: 'rgb(168, 85, 247)', 
-                backgroundColor: 'rgba(168, 85, 247, 0.2)' 
-            }, 
-            'Distribuição de Gordura Corporal (%)'
-        );
+        });
     }
 
-    destroyAllCharts() {
+    // Calculate BMI
+    calculateBMI(weight, height) {
+        if (!weight || !height) return 0;
+        const heightInMeters = height / 100;
+        return (weight / (heightInMeters * heightInMeters)).toFixed(1);
+    }
+
+    // Update charts with new data
+    updateCharts(healthData) {
+        if (!healthData || healthData.length === 0) {
+            console.log('No data to update charts');
+            return;
+        }
+
+        console.log('Updating charts with data:', healthData);
+
+        // Sort data by date
+        const sortedData = healthData.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+        // Update weight and BMI chart
+        if (this.charts.weightBmi) {
+            this.charts.weightBmi.data.labels = sortedData.map(record => {
+                const date = new Date(record.date);
+                return date.toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit' });
+            });
+            this.charts.weightBmi.data.datasets[0].data = sortedData.map(record => record.weight);
+            this.charts.weightBmi.data.datasets[1].data = sortedData.map(record => {
+                // Calculate BMI if not present
+                return record.bmi || this.calculateBMI(record.weight, record.height);
+            });
+            this.charts.weightBmi.update();
+            console.log('Weight/BMI chart updated');
+        }
+
+        // Update composition chart with latest data
+        if (this.charts.composition && sortedData.length > 0) {
+            const latest = sortedData[sortedData.length - 1];
+            const fatMass = latest.weight * (latest.bodyFatPercentage / 100);
+            const muscleMass = latest.muscleMass || 0;
+            const waterMass = latest.weight * 0.6; // Approximate water content
+
+            this.charts.composition.data.datasets[0].data = [
+                fatMass,
+                muscleMass,
+                waterMass
+            ];
+            this.charts.composition.update();
+            console.log('Composition chart updated');
+        }
+
+        // Update fat distribution chart with latest data
+        if (this.charts.fatDistribution && sortedData.length > 0) {
+            const latest = sortedData[sortedData.length - 1];
+            this.charts.fatDistribution.data.datasets[0].data = [
+                latest.visceralFat || 0,
+                (latest.bodyFatPercentage || 0) - (latest.visceralFat || 0),
+                latest.bodyFatPercentage || 0
+            ];
+            this.charts.fatDistribution.update();
+            console.log('Fat distribution chart updated');
+        }
+
+        console.log('Charts updated with', sortedData.length, 'records');
+    }
+
+    // Destroy all charts
+    destroyCharts() {
         Object.values(this.charts).forEach(chart => {
-            if (chart) chart.destroy();
+            if (chart && typeof chart.destroy === 'function') {
+                chart.destroy();
+            }
         });
         this.charts = {};
+        this.isInitialized = false;
+        console.log('Charts destroyed');
+    }
+
+    // Reinitialize charts
+    reinitializeCharts() {
+        this.destroyCharts();
+        this.initializeCharts();
     }
 } 

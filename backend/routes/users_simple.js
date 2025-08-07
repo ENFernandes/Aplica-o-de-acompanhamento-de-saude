@@ -25,11 +25,52 @@ const authenticateToken = (req, res, next) => {
     }
 };
 
+// Get specific user profile by ID (for admin use)
+router.get('/:id/profile', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.params.id;
+        
+        // Check if current user is admin
+        const currentUserResult = await pool.query(
+            'SELECT get_user_role(id) as role FROM users WHERE id = $1',
+            [req.user.userId]
+        );
+        
+        if (currentUserResult.rows.length === 0 || currentUserResult.rows[0].role !== 'admin') {
+            return res.status(403).json({
+                error: 'Admin access required'
+            });
+        }
+        
+        // Get the target user's profile
+        const result = await pool.query(
+            'SELECT id, email, name, address, tax_id, height, TO_CHAR(birthday, \'YYYY-MM-DD\') as birthday, phone, created_at, get_user_role(id) as role FROM users WHERE id = $1',
+            [userId]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                error: 'User not found'
+            });
+        }
+
+        res.json({
+            user: result.rows[0]
+        });
+
+    } catch (error) {
+        console.error('Get specific user profile error:', error);
+        res.status(500).json({
+            error: 'Internal server error'
+        });
+    }
+});
+
 // Get user profile
 router.get('/profile', authenticateToken, async (req, res) => {
     try {
         const result = await pool.query(
-            'SELECT id, email, name, address, tax_id, height, birthday, created_at FROM users WHERE id = $1',
+            'SELECT id, email, name, address, tax_id, height, TO_CHAR(birthday, \'YYYY-MM-DD\') as birthday, phone, created_at, get_user_role(id) as role FROM users WHERE id = $1',
             [req.user.userId]
         );
 
@@ -112,7 +153,7 @@ router.put('/profile', authenticateToken, async (req, res) => {
             UPDATE users 
             SET ${updateFields.join(', ')}, updated_at = NOW()
             WHERE id = $${paramCount}
-            RETURNING id, email, name, address, tax_id, height, birthday, phone, created_at, updated_at
+            RETURNING id, email, name, address, tax_id, height, TO_CHAR(birthday, 'YYYY-MM-DD') as birthday, phone, created_at, updated_at
         `;
 
         const result = await pool.query(query, updateValues);

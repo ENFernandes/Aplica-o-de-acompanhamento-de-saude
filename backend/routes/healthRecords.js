@@ -32,7 +32,7 @@ router.get('/', authenticateToken, async (req, res) => {
         const result = await pool.query(
             `SELECT 
                 id, date, weight, height, age, body_fat_percentage, 
-                body_fat_kg, muscle_mass, bone_mass, bmi, kcal, 
+                muscle_mass, bone_mass, bmi, kcal, 
                 metabolic_age, water_percentage, visceral_fat,
                 fat_right_arm, fat_left_arm, fat_right_leg, fat_left_leg, fat_trunk,
                 created_at, updated_at
@@ -63,7 +63,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
         const result = await pool.query(
             `SELECT 
                 id, date, weight, height, age, body_fat_percentage, 
-                body_fat_kg, muscle_mass, bone_mass, bmi, kcal, 
+                muscle_mass, bone_mass, bmi, kcal, 
                 metabolic_age, water_percentage, visceral_fat,
                 fat_right_arm, fat_left_arm, fat_right_leg, fat_left_leg, fat_trunk,
                 created_at, updated_at
@@ -90,13 +90,44 @@ router.get('/:id', authenticateToken, async (req, res) => {
     }
 });
 
+// Middleware to convert camelCase to snake_case
+const convertCamelToSnake = (req, res, next) => {
+    console.log('🔧 Converting camelCase to snake_case...');
+    console.log('Original body:', req.body);
+    
+    const convertedBody = {};
+    
+    Object.keys(req.body).forEach(key => {
+        let snakeKey = key;
+        
+        // Convert camelCase to snake_case
+        if (key === 'bodyFatPercentage') snakeKey = 'body_fat_percentage';
+        else if (key === 'muscleMass') snakeKey = 'muscle_mass';
+        else if (key === 'boneMass') snakeKey = 'bone_mass';
+        else if (key === 'metabolicAge') snakeKey = 'metabolic_age';
+        else if (key === 'waterPercentage') snakeKey = 'water_percentage';
+        else if (key === 'visceralFat') snakeKey = 'visceral_fat';
+        else if (key === 'fatRightArm') snakeKey = 'fat_right_arm';
+        else if (key === 'fatLeftArm') snakeKey = 'fat_left_arm';
+        else if (key === 'fatRightLeg') snakeKey = 'fat_right_leg';
+        else if (key === 'fatLeftLeg') snakeKey = 'fat_left_leg';
+        else if (key === 'fatTrunk') snakeKey = 'fat_trunk';
+        
+        convertedBody[snakeKey] = req.body[key];
+    });
+    
+    console.log('Converted body:', convertedBody);
+    req.body = convertedBody;
+    next();
+};
+
 // Create a new health record
-router.post('/', authenticateToken, validateHealthRecord, async (req, res) => {
+router.post('/', authenticateToken, validateHealthRecord, convertCamelToSnake, async (req, res) => {
     try {
         const {
-            date, weight, height, age, body_fat_percentage, body_fat_kg,
+            date, weight, height, age, body_fat_percentage,
             muscle_mass, bone_mass, bmi, kcal, metabolic_age, water_percentage,
-            visceral_fat, fat_right_arm, fat_left_arm, fat_right_leg, fat_left_leg, fat_trunk
+            visceral_fat, fat_right_arm, fat_left_arm, fat_right_leg, fat_left_leg, fat_trunk, notes
         } = req.body;
 
         // Check if record for this date already exists
@@ -114,14 +145,14 @@ router.post('/', authenticateToken, validateHealthRecord, async (req, res) => {
         const result = await pool.query(
             `INSERT INTO health_records (
                 user_id, date, weight, height, age, body_fat_percentage, 
-                body_fat_kg, muscle_mass, bone_mass, bmi, kcal, 
+                muscle_mass, bone_mass, bmi, kcal, 
                 metabolic_age, water_percentage, visceral_fat,
                 fat_right_arm, fat_left_arm, fat_right_leg, fat_left_leg, fat_trunk
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
             RETURNING *`,
             [
                 req.user.userId, date, weight, height, age, body_fat_percentage,
-                body_fat_kg, muscle_mass, bone_mass, bmi, kcal, metabolic_age,
+                muscle_mass, bone_mass, bmi, kcal, metabolic_age,
                 water_percentage, visceral_fat, fat_right_arm, fat_left_arm,
                 fat_right_leg, fat_left_leg, fat_trunk
             ]
@@ -160,13 +191,13 @@ router.post('/', authenticateToken, validateHealthRecord, async (req, res) => {
 });
 
 // Update a health record
-router.put('/:id', authenticateToken, validateHealthRecord, async (req, res) => {
+router.put('/:id', authenticateToken, validateHealthRecord, convertCamelToSnake, async (req, res) => {
     try {
         const { id } = req.params;
         const {
-            date, weight, height, age, body_fat_percentage, body_fat_kg,
+            date, weight, height, age, body_fat_percentage,
             muscle_mass, bone_mass, bmi, kcal, metabolic_age, water_percentage,
-            visceral_fat, fat_right_arm, fat_left_arm, fat_right_leg, fat_left_leg, fat_trunk
+            visceral_fat, fat_right_arm, fat_left_arm, fat_right_leg, fat_left_leg, fat_trunk, notes
         } = req.body;
 
         // Check if record exists and belongs to user
@@ -196,13 +227,13 @@ router.put('/:id', authenticateToken, validateHealthRecord, async (req, res) => 
         const result = await pool.query(
             `UPDATE health_records SET 
                 date = $1, weight = $2, height = $3, age = $4, body_fat_percentage = $5,
-                body_fat_kg = $6, muscle_mass = $7, bone_mass = $8, bmi = $9, kcal = $10,
-                metabolic_age = $11, water_percentage = $12, visceral_fat = $13,
-                fat_right_arm = $14, fat_left_arm = $15, fat_right_leg = $16, fat_left_leg = $17, fat_trunk = $18
-            WHERE id = $19 AND user_id = $20
+                muscle_mass = $6, bone_mass = $7, bmi = $8, kcal = $9,
+                metabolic_age = $10, water_percentage = $11, visceral_fat = $12,
+                fat_right_arm = $13, fat_left_arm = $14, fat_right_leg = $15, fat_left_leg = $16, fat_trunk = $17
+            WHERE id = $18 AND user_id = $19
             RETURNING *`,
             [
-                date, weight, height, age, body_fat_percentage, body_fat_kg,
+                date, weight, height, age, body_fat_percentage,
                 muscle_mass, bone_mass, bmi, kcal, metabolic_age, water_percentage,
                 visceral_fat, fat_right_arm, fat_left_arm, fat_right_leg, fat_left_leg, fat_trunk,
                 id, req.user.userId

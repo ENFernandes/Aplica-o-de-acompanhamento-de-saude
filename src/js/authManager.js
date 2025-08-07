@@ -2,15 +2,16 @@
 import { AuthService } from './authService.js';
 import { AuthComponents } from '../components/authComponents.js';
 import { UIService } from './uiService.js';
+import { AppService } from './appService.js';
 
 export class AuthManager {
     constructor() {
+        this.currentView = 'login';
         this.authService = new AuthService();
         this.uiService = new UIService();
-        this.currentView = 'login'; // login, register, password-recovery, app
-        this.isEditingProfile = false;
-        
-        // Don't call checkAuthStatus here, it will be called from main.js
+        this.appService = new AppService();
+        this.viewedUser = null; // Track the user being viewed (for admin viewing other users)
+        this.bindEvents();
     }
 
     bindEvents() {
@@ -24,31 +25,52 @@ export class AuthManager {
             const authResult = await this.authService.checkAuthStatus();
             
             if (authResult.isAuthenticated && authResult.user) {
+                console.log('User authenticated, checking role...');
+                
+                // Check if user is admin
+                const isAdmin = authResult.user && authResult.user.role === 'admin';
+                
+                // Only redirect if not manually navigating and not already on admin page
+                const isOnAdminPage = window.location.pathname.includes('admin.html');
+                const isNavigatingFromAdmin = document.referrer.includes('admin.html');
+                
+                // If admin is on regular page and NOT navigating from admin, redirect to BackOffice
+                if (isAdmin && !isOnAdminPage && !isNavigatingFromAdmin) {
+                    console.log('Admin user detected, redirecting to BackOffice...');
+                    window.location.href = 'admin/admin.html';
+                    return { isAuthenticated: true, user: authResult.user };
+                }
+                
+                // If regular user is on admin page, redirect to main app
+                if (!isAdmin && isOnAdminPage) {
+                    console.log('Regular user on admin page, redirecting to main app...');
+                    window.location.href = 'index.html';
+                    return { isAuthenticated: true, user: authResult.user };
+                }
+                
                 console.log('User authenticated, showing app');
                 this.showApp(authResult.user);
-                return true;
+                return { isAuthenticated: true, user: authResult.user };
             } else {
-                console.log('User not authenticated, showing login');
-                this.showLogin();
-                return false;
+                console.log('User not authenticated');
+                return { isAuthenticated: false, user: null };
             }
         } catch (error) {
             console.error('Error checking auth status:', error);
-            this.showLogin();
-            return false;
+            return { isAuthenticated: false, user: null };
         }
     }
 
     showLogin() {
-        console.log('Showing login form');
-        this.currentView = 'login';
-        const loginHTML = AuthComponents.createLoginForm(
-            this.handleLogin.bind(this),
-            this.showRegister.bind(this),
-            this.showPasswordRecovery.bind(this)
-        );
-        this.updateMainContent(loginHTML);
-        this.attachLoginEvents();
+        //console.log('Showing login form');
+        //this.currentView = 'login';
+        //const loginHTML = AuthComponents.createLoginForm(
+            //this.handleLogin.bind(this),
+            //this.showRegister.bind(this),
+            //this.showPasswordRecovery.bind(this)
+        //);
+        //this.updateMainContent(loginHTML);
+        //this.attachLoginEvents();
     }
 
     showRegister() {
@@ -75,6 +97,29 @@ export class AuthManager {
         console.log('Showing app for user:', user.name);
         this.currentView = 'app';
         
+        // Check if there's a selected user profile from BackOffice
+        const selectedUserProfile = localStorage.getItem('selected-user-profile');
+        if (selectedUserProfile) {
+            try {
+                const selectedUser = JSON.parse(selectedUserProfile);
+                console.log('Selected user profile found:', selectedUser);
+                
+                // Fetch the complete user profile from database
+                this.loadUserProfileFromDatabase(selectedUser.id, selectedUser.name);
+                
+                // Clear the selected user profile from localStorage
+                localStorage.removeItem('selected-user-profile');
+                
+            } catch (error) {
+                console.error('Error parsing selected user profile:', error);
+                localStorage.removeItem('selected-user-profile');
+                this.updateUserDropdown(user);
+            }
+        } else {
+            // Normal user profile
+            this.updateUserDropdown(user);
+        }
+        
         // First, update the main content to show the app area
         const authArea = document.getElementById('auth-area');
         const appArea = document.getElementById('app-area');
@@ -97,16 +142,34 @@ export class AuthManager {
             this.showProfileEdit.bind(this)
         );
         
-        // Add the dropdown to the header
+        // Add the dropdown to the header's top right corner container
         const header = document.querySelector('#app-area header');
         if (header) {
-            // Remove any existing user profile elements
-            const existingProfile = header.querySelector('.absolute.top-4.right-4');
-            if (existingProfile) {
-                existingProfile.remove();
+            // Find the top right corner container
+            const topRightContainer = header.querySelector('.absolute.top-0.right-0');
+            if (topRightContainer) {
+                // Remove any existing user profile elements
+                const existingProfile = topRightContainer.querySelector('.relative');
+                if (existingProfile) {
+                    existingProfile.remove();
+                }
+                
+                // Add BackOffice button for admins
+                if (user.role === 'admin') {
+                    const backOfficeButton = `
+                        <a href="admin/admin.html" class="mr-3 px-3 py-2 text-sm bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors duration-200">
+                            🔧 BackOffice
+                        </a>
+                    `;
+                    topRightContainer.insertAdjacentHTML('beforeend', backOfficeButton);
+                }
+                
+                topRightContainer.insertAdjacentHTML('beforeend', userProfileHTML);
+                console.log('User dropdown menu added to top right corner');
+            } else {
+                console.log('Top right container not found, adding to header');
+                header.insertAdjacentHTML('beforeend', userProfileHTML);
             }
-            header.insertAdjacentHTML('beforeend', userProfileHTML);
-            console.log('User dropdown menu added to header');
         }
         
         this.attachAppEvents();
@@ -221,58 +284,150 @@ export class AuthManager {
 
     // Event handlers
     async handleLogin(e) {
-        e.preventDefault();
-        const formData = new FormData(e.target);
-        const email = formData.get('email');
-        const password = formData.get('password');
+        let email, password;
+        
+        // Check if e is an event object or if we're being called directly
+        if (e && e.preventDefault && typeof e.preventDefault === 'function') {
+            // Called as event handler
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            email = formData.get('email');
+            password = formData.get('password');
+
+            // Disable login button to prevent multiple submissions
+            const loginButton = e.target.querySelector('button[type="submit"]');
+            if (loginButton) {
+                loginButton.disabled = true;
+                loginButton.textContent = 'A entrar...';
+            }
+        } else {
+            // Called directly with parameters
+            email = e; // e is actually the email
+            password = arguments[1]; // password is the second argument
+        }
 
         try {
             const result = await this.authService.login(email, password);
             if (result.success) {
-                this.uiService.showToast('Login realizado com sucesso!', false);
-                this.showApp(result.user);
+                // Check if user is admin
+                const isAdmin = result.user && result.user.role === 'admin';
+                
+                // Check if we're on login page or main app
+                if (window.location.pathname.includes('login.html')) {
+                    // On login page, redirect based on user role
+                    if (isAdmin) {
+                        // Admin users go to BackOffice
+                        window.location.href = 'admin/admin.html';
+                    } else {
+                        // Regular users go to main app
+                        window.location.href = 'index.html';
+                    }
+                } else {
+                    // In main app, check if admin should be redirected
+                    if (isAdmin && !window.location.pathname.includes('admin.html')) {
+                        // Admin is in regular app, redirect to BackOffice
+                        window.location.href = 'admin/admin.html';
+                    } else {
+                        // Show app normally
+                        this.uiService.showToast('Login realizado com sucesso!', false);
+                        this.showApp(result.user);
+                    }
+                }
             }
         } catch (error) {
-            this.uiService.showToast(error.message);
+            // Re-throw the error so it can be caught by the calling function
+            throw error;
+        } finally {
+            // Re-enable login button if it was disabled
+            if (e && e.target) {
+                const loginButton = e.target.querySelector('button[type="submit"]');
+                if (loginButton) {
+                    loginButton.disabled = false;
+                    loginButton.textContent = 'Entrar';
+                }
+            }
         }
     }
 
     async handleRegister(e) {
-        e.preventDefault();
-        const formData = new FormData(e.target);
-        const name = formData.get('name');
-        const email = formData.get('email');
-        const password = formData.get('password');
-        const confirmPassword = formData.get('confirmPassword');
+        let name, email, password, confirmPassword;
+        
+        // Check if e is an event object or if we're being called directly
+        if (e && e.preventDefault && typeof e.preventDefault === 'function') {
+            // Called as event handler
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            name = formData.get('name');
+            email = formData.get('email');
+            password = formData.get('password');
+            confirmPassword = formData.get('confirmPassword');
+        } else {
+            // Called directly with parameters
+            name = e; // e is actually the name
+            email = arguments[1]; // email is the second argument
+            password = arguments[2]; // password is the third argument
+            confirmPassword = arguments[3]; // confirmPassword is the fourth argument
+        }
 
         // Validate passwords match
         if (password !== confirmPassword) {
-            this.uiService.showToast('As passwords não coincidem');
+            if (window.location.pathname.includes('login.html')) {
+                // On login page, use showStatus function
+                if (typeof showStatus === 'function') {
+                    showStatus('As passwords não coincidem', 'error');
+                }
+            } else {
+                this.uiService.showToast('As passwords não coincidem');
+            }
             return;
         }
 
         // Validate password strength
         if (password.length < 6) {
-            this.uiService.showToast('A password deve ter pelo menos 6 caracteres');
+            if (window.location.pathname.includes('login.html')) {
+                // On login page, use showStatus function
+                if (typeof showStatus === 'function') {
+                    showStatus('A password deve ter pelo menos 6 caracteres', 'error');
+                }
+            } else {
+                this.uiService.showToast('A password deve ter pelo menos 6 caracteres');
+            }
             return;
         }
 
         try {
             const result = await this.authService.register(email, password, name);
             if (result.success) {
-                this.uiService.showToast('Registo realizado com sucesso! Agora pode fazer login com as suas credenciais.', false);
+                if (window.location.pathname.includes('login.html')) {
+                    // On login page, use showStatus function
+                    if (typeof showStatus === 'function') {
+                        showStatus('Registo realizado com sucesso! Agora pode fazer login com as suas credenciais.', 'success');
+                    }
+                } else {
+                    this.uiService.showToast('Registo realizado com sucesso! Agora pode fazer login com as suas credenciais.', false);
+                }
                 // Show login page instead of app after successful registration
                 this.showLogin();
             }
         } catch (error) {
-            this.uiService.showToast(error.message);
+            // Re-throw the error so it can be caught by the calling function
+            throw error;
         }
     }
 
     async handlePasswordRecovery(e) {
-        e.preventDefault();
-        const formData = new FormData(e.target);
-        const email = formData.get('email');
+        let email;
+        
+        // Check if e is an event object or if we're being called directly
+        if (e && e.preventDefault && typeof e.preventDefault === 'function') {
+            // Called as event handler
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            email = formData.get('email');
+        } else {
+            // Called directly with parameters
+            email = e; // e is actually the email
+        }
 
         try {
             const result = await this.authService.sendPasswordResetEmail(email);
@@ -289,9 +444,12 @@ export class AuthManager {
         try {
             await this.authService.logout();
             this.uiService.showToast('Logout realizado com sucesso!', false);
-            this.showLogin();
+            // Redirect to login page instead of showing login form
+            window.location.href = 'login.html';
         } catch (error) {
             this.uiService.showToast(error.message);
+            // Even if there's an error, redirect to login page
+            window.location.href = 'login.html';
         }
     }
 
@@ -337,28 +495,299 @@ export class AuthManager {
         }
     }
     
-    updateUserDropdown(user) {
-        // Update the user name in the dropdown button
-        const userMenuBtn = document.getElementById('user-menu-btn');
-        if (userMenuBtn) {
-            const nameSpan = userMenuBtn.querySelector('span');
-            if (nameSpan) {
-                nameSpan.textContent = user.name;
-            }
+    updateUserDropdown(user, isViewingAnotherUser = false) {
+        console.log('Updating user dropdown with user:', user, 'isViewingAnotherUser:', isViewingAnotherUser);
+        
+        const userDropdownContainer = document.getElementById('user-dropdown-container');
+        if (userDropdownContainer) {
+            userDropdownContainer.innerHTML = AuthComponents.createUserProfile(
+                user, 
+                () => this.handleLogout(), 
+                () => this.showProfileEdit(),
+                isViewingAnotherUser
+            );
             
-            const avatarSpan = userMenuBtn.querySelector('.w-8.h-8 span');
-            if (avatarSpan) {
-                avatarSpan.textContent = user.name.charAt(0).toUpperCase();
+            // Attach dropdown toggle event
+            const userMenuBtn = document.getElementById('user-menu-btn');
+            const userMenuDropdown = document.getElementById('user-menu-dropdown');
+            
+            if (userMenuBtn && userMenuDropdown) {
+                userMenuBtn.addEventListener('click', () => {
+                    userMenuDropdown.classList.toggle('hidden');
+                });
+                
+                // Close dropdown when clicking outside
+                document.addEventListener('click', (e) => {
+                    if (!userMenuBtn.contains(e.target) && !userMenuDropdown.contains(e.target)) {
+                        userMenuDropdown.classList.add('hidden');
+                    }
+                });
+                
+                // Attach menu item events
+                const editProfileBtn = document.getElementById('edit-profile-menu-btn');
+                const viewProfileBtn = document.getElementById('view-profile-btn');
+                const logoutBtn = document.getElementById('logout-menu-btn');
+                const returnToMyProfileBtn = document.getElementById('return-to-my-profile-btn');
+                
+                if (editProfileBtn) {
+                    editProfileBtn.addEventListener('click', () => {
+                        this.showProfileEdit();
+                        userMenuDropdown.classList.add('hidden');
+                    });
+                }
+                
+                if (viewProfileBtn) {
+                    viewProfileBtn.addEventListener('click', () => {
+                        // This could be used for viewing own profile details
+                        userMenuDropdown.classList.add('hidden');
+                    });
+                }
+                
+                if (logoutBtn) {
+                    logoutBtn.addEventListener('click', () => {
+                        this.handleLogout();
+                        userMenuDropdown.classList.add('hidden');
+                    });
+                }
+                
+                if (returnToMyProfileBtn) {
+                    returnToMyProfileBtn.addEventListener('click', () => {
+                        this.clearViewedUser();
+                        userMenuDropdown.classList.add('hidden');
+                    });
+                }
             }
         }
+    }
+
+    // Load user profile from database
+    async loadUserProfileFromDatabase(userId, userName) {
+        try {
+            console.log('Loading user profile from database for ID:', userId);
+            
+            const token = localStorage.getItem('auth-token');
+            const response = await fetch(`http://localhost:3000/api/users/${userId}/profile`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                const userProfile = data.user;
+                console.log('User profile loaded from database:', userProfile);
+                
+                // Store the viewed user data
+                this.viewedUser = userProfile;
+                
+                // Show notification that we're viewing another user's profile
+                this.uiService.showToast(`A visualizar perfil de: ${userName}`, false);
+                
+                // Update the user dropdown to show we're viewing another user
+                this.updateUserDropdown(userProfile, true);
+                
+                // Update form fields with the user's data
+                this.updateFormWithUserData(userProfile);
+                
+            } else {
+                console.error('Failed to load user profile from database');
+                this.uiService.showToast('Erro ao carregar perfil do utilizador', true);
+                // Fallback to current user
+                const currentUser = this.authService.getCurrentUser();
+                this.viewedUser = null;
+                this.updateUserDropdown(currentUser);
+            }
+            
+        } catch (error) {
+            console.error('Error loading user profile from database:', error);
+            this.uiService.showToast('Erro ao carregar perfil do utilizador', true);
+            // Fallback to current user
+            const currentUser = this.authService.getCurrentUser();
+            this.viewedUser = null;
+            this.updateUserDropdown(currentUser);
+        }
+    }
+    
+    // Update form fields with user data
+    updateFormWithUserData(user) {
+        console.log('Updating form with user data:', user);
         
-        // Update height field in main form if it exists
+        // Check if we're viewing another user's profile
+        const isViewingAnotherUser = this.viewedUser && this.viewedUser.id !== this.authService.getCurrentUser()?.id;
+        
+        // Update height field
         const heightInput = document.getElementById('height');
         if (heightInput && user.height) {
             heightInput.value = user.height;
-            heightInput.readOnly = true;
-            heightInput.classList.add('bg-gray-100', 'cursor-not-allowed');
+            if (isViewingAnotherUser) {
+                heightInput.readOnly = true;
+                heightInput.classList.add('bg-gray-100', 'cursor-not-allowed');
+            } else {
+                heightInput.readOnly = false;
+                heightInput.classList.remove('bg-gray-100', 'cursor-not-allowed');
+            }
+            console.log('Height field updated with:', user.height);
         }
+        
+        // Update name field if it exists
+        const nameInput = document.getElementById('name');
+        if (nameInput && user.name) {
+            nameInput.value = user.name;
+            if (isViewingAnotherUser) {
+                nameInput.readOnly = true;
+                nameInput.classList.add('bg-gray-100', 'cursor-not-allowed');
+            } else {
+                nameInput.readOnly = false;
+                nameInput.classList.remove('bg-gray-100', 'cursor-not-allowed');
+            }
+            console.log('Name field updated with:', user.name);
+        }
+        
+        // Update email field if it exists
+        const emailInput = document.getElementById('email');
+        if (emailInput && user.email) {
+            emailInput.value = user.email;
+            if (isViewingAnotherUser) {
+                emailInput.readOnly = true;
+                emailInput.classList.add('bg-gray-100', 'cursor-not-allowed');
+            } else {
+                emailInput.readOnly = false;
+                emailInput.classList.remove('bg-gray-100', 'cursor-not-allowed');
+            }
+            console.log('Email field updated with:', user.email);
+        }
+        
+        // Update address field if it exists
+        const addressInput = document.getElementById('address');
+        if (addressInput && user.address) {
+            addressInput.value = user.address;
+            if (isViewingAnotherUser) {
+                addressInput.readOnly = true;
+                addressInput.classList.add('bg-gray-100', 'cursor-not-allowed');
+            } else {
+                addressInput.readOnly = false;
+                addressInput.classList.remove('bg-gray-100', 'cursor-not-allowed');
+            }
+            console.log('Address field updated with:', user.address);
+        }
+        
+        // Update tax_id field if it exists
+        const taxIdInput = document.getElementById('tax_id');
+        if (taxIdInput && user.tax_id) {
+            taxIdInput.value = user.tax_id;
+            if (isViewingAnotherUser) {
+                taxIdInput.readOnly = true;
+                taxIdInput.classList.add('bg-gray-100', 'cursor-not-allowed');
+            } else {
+                taxIdInput.readOnly = false;
+                taxIdInput.classList.remove('bg-gray-100', 'cursor-not-allowed');
+            }
+            console.log('Tax ID field updated with:', user.tax_id);
+        }
+        
+        // Update phone field if it exists
+        const phoneInput = document.getElementById('phone');
+        if (phoneInput && user.phone) {
+            phoneInput.value = user.phone;
+            if (isViewingAnotherUser) {
+                phoneInput.readOnly = true;
+                phoneInput.classList.add('bg-gray-100', 'cursor-not-allowed');
+            } else {
+                phoneInput.readOnly = false;
+                phoneInput.classList.remove('bg-gray-100', 'cursor-not-allowed');
+            }
+            console.log('Phone field updated with:', user.phone);
+        }
+        
+        // Update birthday field if it exists
+        const birthdayInput = document.getElementById('birthday');
+        if (birthdayInput && user.birthday) {
+            birthdayInput.value = user.birthday;
+            if (isViewingAnotherUser) {
+                birthdayInput.readOnly = true;
+                birthdayInput.classList.add('bg-gray-100', 'cursor-not-allowed');
+            } else {
+                birthdayInput.readOnly = false;
+                birthdayInput.classList.remove('bg-gray-100', 'cursor-not-allowed');
+            }
+            console.log('Birthday field updated with:', user.birthday);
+        }
+        
+        // Calculate and update age field if it exists
+        const ageInput = document.getElementById('age');
+        if (ageInput && user.birthday) {
+            const age = this.calculateAge(user.birthday);
+            ageInput.value = age;
+            if (isViewingAnotherUser) {
+                ageInput.readOnly = true;
+                ageInput.classList.add('bg-gray-100', 'cursor-not-allowed');
+            } else {
+                ageInput.readOnly = false;
+                ageInput.classList.remove('bg-gray-100', 'cursor-not-allowed');
+            }
+            console.log('Age calculated and updated with:', age);
+        }
+        
+        // Show a visual indicator that we're viewing another user's data
+        const formTitle = document.querySelector('h1, h2, h3');
+        if (formTitle && isViewingAnotherUser) {
+            // Remove any existing indicator first
+            formTitle.innerHTML = formTitle.innerHTML.replace(/<span class="text-sm text-blue-600 font-normal">\(Visualizando: .*?\)<\/span>/, '');
+            // Add new indicator
+            formTitle.innerHTML += ` <span class="text-sm text-blue-600 font-normal">(Visualizando: ${user.name})</span>`;
+        } else if (formTitle && !isViewingAnotherUser) {
+            // Remove indicator when viewing own profile
+            formTitle.innerHTML = formTitle.innerHTML.replace(/<span class="text-sm text-blue-600 font-normal">\(Visualizando: .*?\)<\/span>/, '');
+        }
+        
+        console.log('Form updated with user data:', user);
+    }
+    
+    // Calculate age from birthday
+    calculateAge(birthday) {
+        if (!birthday) return '';
+        
+        try {
+            const birthDate = new Date(birthday);
+            const today = new Date();
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const monthDiff = today.getMonth() - birthDate.getMonth();
+            
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                age--;
+            }
+            
+            return age.toString();
+        } catch (error) {
+            console.error('Error calculating age:', error);
+            return '';
+        }
+    }
+    
+    // Clear viewed user and return to admin's own profile
+    clearViewedUser() {
+        console.log('Clearing viewed user, returning to admin profile');
+        this.viewedUser = null;
+        
+        // Get the authenticated admin user
+        const adminUser = this.authService.getCurrentUser();
+        
+        // Update form fields with admin's own data
+        this.updateFormWithUserData(adminUser);
+        
+        // Update user dropdown to show admin's profile
+        this.updateUserDropdown(adminUser, false);
+        
+        // Remove the visual indicator
+        const formTitle = document.querySelector('h1, h2, h3');
+        if (formTitle) {
+            // Remove the "(Visualizando: ...)" part
+            formTitle.innerHTML = formTitle.innerHTML.replace(/<span class="text-sm text-blue-600 font-normal">\(Visualizando: .*?\)<\/span>/, '');
+        }
+        
+        this.uiService.showToast('Voltou ao seu perfil', false);
     }
 
     // Event attachments
@@ -407,6 +836,7 @@ export class AuthManager {
         const userMenuDropdown = document.getElementById('user-menu-dropdown');
         const editProfileMenuBtn = document.getElementById('edit-profile-menu-btn');
         const logoutMenuBtn = document.getElementById('logout-menu-btn');
+        const viewProfileBtn = document.getElementById('view-profile-btn'); // New button
 
         // Toggle dropdown menu
         if (userMenuBtn && userMenuDropdown) {
@@ -437,6 +867,16 @@ export class AuthManager {
                 this.handleLogout();
             });
         }
+
+        // View profile from menu
+        if (viewProfileBtn) {
+            viewProfileBtn.addEventListener('click', () => {
+                userMenuDropdown.classList.add('hidden');
+                // This button should ideally navigate to the profile page of the current user
+                // For now, it will just navigate to the main app, as the profile page is not yet implemented
+                window.location.href = 'index.html';
+            });
+        }
     }
 
     attachProfileEditEvents() {
@@ -453,10 +893,17 @@ export class AuthManager {
 
     // Public methods
     getCurrentUser() {
-        return this.authService.getCurrentUser();
+        return this.viewedUser || this.authService.getCurrentUser();
     }
 
     isAuthenticated() {
+        // Check if we have a token in localStorage as a quick check
+        const token = localStorage.getItem('auth-token');
+        if (!token) {
+            return false;
+        }
+        
+        // Also check the auth service state
         return this.authService.isUserAuthenticated();
     }
 

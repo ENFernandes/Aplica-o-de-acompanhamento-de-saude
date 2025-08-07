@@ -1,7 +1,4 @@
-// Enhanced Authentication service for secure login, registration, and password recovery
-// DATABASE-ONLY MODE - No localStorage fallbacks
-import { authFunctions, useLocalStorage } from './firebaseConfig.js';
-import { LocalStorageService } from './localStorageService.js';
+// Authentication service for secure login, registration, and password recovery
 import { DatabaseService } from './databaseService.js';
 
 export class AuthService {
@@ -9,16 +6,13 @@ export class AuthService {
         this.currentUser = null;
         this.isAuthenticated = false;
         this.token = null;
-        this.localStorageService = new LocalStorageService('auth-data');
         this.databaseService = new DatabaseService();
-        // Force database mode - no localStorage initialization
-        console.log('AuthService initialized in DATABASE-ONLY mode');
+        console.log('AuthService initialized');
     }
 
     // Check if user is logged in
     async checkAuthStatus() {
         try {
-            // Always use backend API - no localStorage fallback
             const token = localStorage.getItem('auth-token');
             if (!token) {
                 return { isAuthenticated: false, user: null };
@@ -33,9 +27,31 @@ export class AuthService {
                 });
 
                 if (response.success) {
-                    this.currentUser = response.data.user;
+                    // Get basic user info first
+                    this.currentUser = response.data.data.user;
                     this.isAuthenticated = true;
                     this.token = token;
+                    
+                    // Now fetch complete profile with all fields
+                    try {
+                        const profileResponse = await this.databaseService.makeRequest('/api/users/profile', {
+                            method: 'GET',
+                            headers: {
+                                'Authorization': `Bearer ${token}`
+                            }
+                        });
+                        
+                        if (profileResponse.success) {
+                            // Update with complete profile data
+                            this.currentUser = profileResponse.data.user;
+                            console.log('Complete user profile loaded:', this.currentUser.name);
+                        } else {
+                            console.log('Could not fetch complete profile, using basic info');
+                        }
+                    } catch (profileError) {
+                        console.log('Profile fetch failed, using basic user info:', profileError);
+                    }
+                    
                     console.log('User authenticated via database:', this.currentUser.name);
                     return { isAuthenticated: true, user: this.currentUser };
                 } else {
@@ -60,7 +76,6 @@ export class AuthService {
     // Register new user
     async register(email, password, name) {
         try {
-            // Always use backend API - no localStorage fallback
             const response = await this.databaseService.makeRequest('/api/auth/register', {
                 method: 'POST',
                 headers: {
@@ -86,7 +101,6 @@ export class AuthService {
     // Login user
     async login(email, password) {
         try {
-            // Always use backend API - no localStorage fallback
             const response = await this.databaseService.makeRequest('/api/auth/login', {
                 method: 'POST',
                 headers: {
@@ -145,7 +159,6 @@ export class AuthService {
     // Password recovery
     async sendPasswordResetEmail(email) {
         try {
-            // Always use backend API - no localStorage fallback
             const response = await this.databaseService.makeRequest('/api/auth/forgot-password', {
                 method: 'POST',
                 headers: {
@@ -167,7 +180,6 @@ export class AuthService {
     // Reset password with token
     async resetPassword(token, newPassword) {
         try {
-            // Always use backend API - no localStorage fallback
             const response = await this.databaseService.makeRequest('/api/auth/reset-password', {
                 method: 'POST',
                 headers: {
@@ -189,7 +201,6 @@ export class AuthService {
     // Change password
     async changePassword(currentPassword, newPassword) {
         try {
-            // Always use backend API - no localStorage fallback
             const response = await this.databaseService.makeRequest('/api/auth/change-password', {
                 method: 'POST',
                 headers: {
@@ -231,7 +242,6 @@ export class AuthService {
                 throw new Error('Utilizador não autenticado');
             }
 
-            // Always use backend API - no localStorage fallback
             const response = await this.databaseService.makeRequest('/api/users/profile', {
                 method: 'PUT',
                 headers: {

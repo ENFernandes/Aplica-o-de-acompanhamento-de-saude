@@ -1,26 +1,30 @@
 # Health Tracker - Acompanhamento de Saúde
 
-Uma aplicação web moderna para acompanhamento de saúde pessoal, com suporte a dados locais e Firebase.
+Uma aplicação web moderna para acompanhamento de saúde pessoal com backend PostgreSQL.
 
 ## 🚀 Funcionalidades
 
 - **Registro de Dados de Saúde**: Peso, altura, IMC, massa muscular, gordura corporal, etc.
 - **Visualização Gráfica**: Gráficos interativos mostrando evolução dos dados
 - **Sugestões Personalizadas**: Recomendações baseadas nos seus dados
-- **Modo Local**: Funciona sem internet, salvando dados no navegador
-- **Modo Firebase**: Sincronização em nuvem (quando configurado)
 - **Interface Responsiva**: Otimizada para desktop e mobile
 - **Edição Inline**: Edite registros diretamente na tabela
+- **Autenticação Segura**: Sistema de login e registro de usuários
+- **Perfil de Usuário**: Edição de dados pessoais
 
 ## 📁 Estrutura do Projeto
 
 ```
 Aplicação de Acompanhamento de Saúde/
-├── index.html                 # Página principal
+├── index.html                 # Página principal da aplicação
+├── login.html                 # Página de login e registro
 ├── README.md                  # Este arquivo
 ├── docker-compose.yml         # Configuração Docker
 ├── init-scripts/              # Scripts de inicialização da BD
-│   └── 01-init-database.sql  # Schema e dados iniciais
+│   ├── 01-init-database.sql  # Schema inicial
+│   ├── 02-update-database.sql # Atualizações do schema
+│   ├── 03-add-birthday-column.sql # Adição de coluna birthday
+│   └── 04-add-user-fields.sql # Campos adicionais de usuário
 ├── backend/                   # Backend API
 │   ├── package.json           # Dependências Node.js
 │   ├── server.js              # Servidor Express
@@ -28,45 +32,38 @@ Aplicação de Acompanhamento de Saúde/
 │   ├── config/
 │   │   └── database.js        # Configuração PostgreSQL
 │   ├── routes/
-│   │   ├── auth.js            # Rotas de autenticação
+│   │   ├── auth_simple.js     # Rotas de autenticação
 │   │   ├── healthRecords.js   # Rotas de registros de saúde
-│   │   └── users.js           # Rotas de usuários
+│   │   └── users_simple.js    # Rotas de usuários
 │   └── middleware/
+│       ├── auth.js            # Middleware de autenticação
 │       └── validation.js      # Validação de dados
 └── src/
     ├── css/
-    │   └── styles.css        # Estilos CSS
+    │   ├── styles.css         # Estilos da aplicação principal
+    │   └── login.css          # Estilos da página de login
     ├── js/
-    │   ├── main.js           # Ponto de entrada da aplicação
-    │   ├── appService.js     # Serviço principal da aplicação
+    │   ├── main.js            # Ponto de entrada da aplicação
+    │   ├── appService.js      # Serviço principal da aplicação
     │   ├── databaseService.js # Serviço de comunicação com API
-    │   ├── authService.js    # Serviço de autenticação
-    │   ├── authManager.js    # Gerenciador de autenticação
-    │   ├── firebaseConfig.js # Configuração do Firebase
-    │   ├── localStorageService.js # Serviço de armazenamento local
-    │   ├── validationService.js   # Validação de dados
-    │   ├── chartService.js        # Renderização de gráficos
-    │   ├── suggestionsService.js  # Geração de sugestões
-    │   └── uiService.js           # Utilitários de interface
+    │   ├── authService.js     # Serviço de autenticação
+    │   ├── authManager.js     # Gerenciador de autenticação
+    │   ├── validationService.js # Validação de dados
+    │   ├── uiService.js       # Utilitários de interface
+    │   └── login.js           # Lógica da página de login
     ├── components/
-    │   └── authComponents.js # Componentes de autenticação
+    │   └── authComponents.js  # Componentes de autenticação
     └── data/
-        └── initialData.js    # Dados iniciais e configurações
+        └── initialData.js     # Dados iniciais e configurações
 ```
 
 ## 🛠️ Tecnologias Utilizadas
 
-- **HTML5**: Estrutura da página
-- **CSS3**: Estilos e responsividade
-- **JavaScript ES6+**: Lógica da aplicação
-- **Tailwind CSS**: Framework CSS utilitário
-- **Chart.js**: Biblioteca de gráficos
-- **PostgreSQL**: Base de dados principal
-- **Node.js/Express**: Backend API
-- **JWT**: Autenticação segura
-- **Docker**: Containerização da base de dados
-- **Firebase**: Backend em nuvem (opcional)
-- **LocalStorage**: Armazenamento local (fallback)
+- **Frontend**: HTML5, CSS3, JavaScript ES6+, Tailwind CSS, Chart.js
+- **Backend**: Node.js/Express, PostgreSQL, JWT, bcryptjs, Joi
+- **Segurança**: express-rate-limit, helmet, cors
+- **Containerização**: Docker
+- **Autenticação**: JWT (JSON Web Tokens)
 
 ## 🚀 Como Usar
 
@@ -99,7 +96,7 @@ cp env.example .env
 # Edite o arquivo .env com suas configurações
 
 # Inicie o servidor de desenvolvimento
-npm run dev
+npm start
 ```
 
 ### 3. Execução do Frontend
@@ -114,73 +111,60 @@ python -m http.server 8000
 # http://localhost:8000
 ```
 
-### 2. Configuração Firebase (Opcional)
-Para usar com Firebase, adicione as seguintes variáveis globais:
-
-```javascript
-// No console do navegador ou em um script
-window.__firebase_config = {
-    apiKey: "sua-api-key",
-    authDomain: "seu-projeto.firebaseapp.com",
-    projectId: "seu-projeto",
-    storageBucket: "seu-projeto.appspot.com",
-    messagingSenderId: "123456789",
-    appId: "seu-app-id"
-};
-```
-
 ## 📊 Funcionalidades Principais
 
-### Modo Local
-- ✅ Funciona sem internet
-- ✅ Dados salvos no navegador
-- ✅ Todos os recursos disponíveis
-- ✅ Dados persistem entre sessões
+### Autenticação
+- ✅ Registro de novos usuários
+- ✅ Login seguro com JWT
+- ✅ Recuperação de senha
+- ✅ Perfil de usuário editável
 
-### Modo Firebase
-- ✅ Sincronização em nuvem
-- ✅ Autenticação anônima
-- ✅ Dados compartilhados entre dispositivos
-- ✅ Backup automático
+### Registros de Saúde
+- ✅ Adicionar novos registros
+- ✅ Editar registros existentes
+- ✅ Excluir registros
+- ✅ Visualização em tabela
+
+### Gráficos e Análises
+- ✅ Evolução do peso e IMC
+- ✅ Composição corporal
+- ✅ Distribuição de gordura
+
+### Interface
+- ✅ Design responsivo
+- ✅ Edição inline na tabela
+- ✅ Validação em tempo real
+- ✅ Feedback visual
 
 ## 🎨 Interface
 
-### Formulário de Registro
-- Campos para todos os dados de saúde
-- Validação automática
-- Preenchimento automático da data
+### Página de Login
+- Formulário de login e registro
+- Recuperação de senha
+- Design moderno com glass effect
 
-### Tabela de Histórico
-- Visualização de todos os registros
-- Edição inline
-- Exclusão com confirmação
-- Validação de dados
-
-### Gráficos
-- Evolução do peso e IMC
-- Composição corporal
-- Distribuição de gordura
-
-### Sugestões
-- Recomendações personalizadas
-- Baseadas nos dados mais recentes
-- Ícones visuais
+### Aplicação Principal
+- Header com título centralizado
+- Menu de usuário no canto superior direito
+- Formulário de registro de dados
+- Tabela de histórico com edição inline
+- Gráficos interativos
 
 ## 🔧 Desenvolvimento
 
 ### Estrutura Modular
 O código foi organizado em módulos para facilitar manutenção:
 
-- **Services**: Lógica de negócio
-- **Data**: Configurações e dados
-- **UI**: Componentes de interface
-- **Validation**: Validação de dados
+- **Services**: Lógica de negócio (AppService, AuthService, DatabaseService)
+- **UI**: Componentes de interface (UIService, AuthManager)
+- **Validation**: Validação de dados (ValidationService)
+- **Components**: Componentes reutilizáveis (authComponents)
 
 ### Padrões Utilizados
 - **Service Pattern**: Separação de responsabilidades
 - **Observer Pattern**: Atualizações em tempo real
 - **Factory Pattern**: Criação de elementos UI
-- **Strategy Pattern**: Diferentes modos de armazenamento
+- **Module Pattern**: Organização em módulos ES6
 
 ## 📱 Responsividade
 
@@ -190,28 +174,31 @@ A aplicação é totalmente responsiva e funciona em:
 - ✅ Mobile
 - ✅ Diferentes navegadores
 
-## 🔒 Privacidade
+## 🔒 Segurança
 
-- **Modo Local**: Dados ficam apenas no seu dispositivo
-- **Modo Firebase**: Dados sincronizados com sua conta
-- **Sem rastreamento**: Não coletamos dados pessoais
+- **JWT Authentication**: Tokens seguros para autenticação
+- **Password Hashing**: Senhas criptografadas com bcryptjs
+- **Input Validation**: Validação rigorosa de dados
+- **Rate Limiting**: Proteção contra ataques de força bruta
+- **CORS**: Configuração segura de cross-origin
 
 ## 🐛 Solução de Problemas
 
 ### Aplicação não carrega
-1. Verifique se está usando um servidor local
-2. Limpe o cache do navegador
-3. Verifique o console para erros
+1. Verifique se o backend está rodando (porta 3000)
+2. Verifique se o servidor frontend está rodando (porta 8000)
+3. Limpe o cache do navegador
+4. Verifique o console para erros
+
+### Erro de autenticação
+1. Verifique se o token está válido
+2. Tente fazer logout e login novamente
+3. Verifique se o backend está acessível
 
 ### Dados não salvam
-1. Verifique se o LocalStorage está habilitado
-2. Tente em modo incógnito
-3. Verifique espaço disponível
-
-### Gráficos não aparecem
-1. Verifique se Chart.js carregou
-2. Recarregue a página
-3. Verifique se há dados para exibir
+1. Verifique se está logado
+2. Verifique se o backend está rodando
+3. Verifique o console para erros de API
 
 ## 📄 Licença
 

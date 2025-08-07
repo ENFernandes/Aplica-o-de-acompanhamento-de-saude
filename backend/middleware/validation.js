@@ -45,19 +45,29 @@ const healthRecordSchema = Joi.object({
         'number.min': 'Age must be at least 1',
         'number.max': 'Age cannot exceed 150'
     }),
+    // Support both snake_case and camelCase field names
     body_fat_percentage: Joi.number().min(1).max(50).optional().messages({
         'number.min': 'Body fat percentage must be at least 1%',
         'number.max': 'Body fat percentage cannot exceed 50%'
     }),
-    body_fat_kg: Joi.number().min(0).max(100).optional().messages({
-        'number.min': 'Body fat kg cannot be negative',
-        'number.max': 'Body fat kg cannot exceed 100 kg'
+    bodyFatPercentage: Joi.number().min(1).max(50).optional().messages({
+        'number.min': 'Body fat percentage must be at least 1%',
+        'number.max': 'Body fat percentage cannot exceed 50%'
     }),
+
     muscle_mass: Joi.number().min(0).max(100).optional().messages({
         'number.min': 'Muscle mass cannot be negative',
         'number.max': 'Muscle mass cannot exceed 100 kg'
     }),
+    muscleMass: Joi.number().min(0).max(100).optional().messages({
+        'number.min': 'Muscle mass cannot be negative',
+        'number.max': 'Muscle mass cannot exceed 100 kg'
+    }),
     bone_mass: Joi.number().min(0).max(10).optional().messages({
+        'number.min': 'Bone mass cannot be negative',
+        'number.max': 'Bone mass cannot exceed 10 kg'
+    }),
+    boneMass: Joi.number().min(0).max(10).optional().messages({
         'number.min': 'Bone mass cannot be negative',
         'number.max': 'Bone mass cannot exceed 10 kg'
     }),
@@ -75,7 +85,16 @@ const healthRecordSchema = Joi.object({
         'number.min': 'Metabolic age must be at least 10',
         'number.max': 'Metabolic age cannot exceed 100'
     }),
+    metabolicAge: Joi.number().integer().min(10).max(100).optional().messages({
+        'number.integer': 'Metabolic age must be a whole number',
+        'number.min': 'Metabolic age must be at least 10',
+        'number.max': 'Metabolic age cannot exceed 100'
+    }),
     water_percentage: Joi.number().min(30).max(80).optional().messages({
+        'number.min': 'Water percentage must be at least 30%',
+        'number.max': 'Water percentage cannot exceed 80%'
+    }),
+    waterPercentage: Joi.number().min(30).max(80).optional().messages({
         'number.min': 'Water percentage must be at least 30%',
         'number.max': 'Water percentage cannot exceed 80%'
     }),
@@ -84,7 +103,16 @@ const healthRecordSchema = Joi.object({
         'number.min': 'Visceral fat must be at least 1',
         'number.max': 'Visceral fat cannot exceed 30'
     }),
+    visceralFat: Joi.number().integer().min(1).max(30).optional().messages({
+        'number.integer': 'Visceral fat must be a whole number',
+        'number.min': 'Visceral fat must be at least 1',
+        'number.max': 'Visceral fat cannot exceed 30'
+    }),
     fat_right_arm: Joi.number().min(0).max(50).optional().messages({
+        'number.min': 'Right arm fat cannot be negative',
+        'number.max': 'Right arm fat cannot exceed 50%'
+    }),
+    fatRightArm: Joi.number().min(0).max(50).optional().messages({
         'number.min': 'Right arm fat cannot be negative',
         'number.max': 'Right arm fat cannot exceed 50%'
     }),
@@ -92,7 +120,15 @@ const healthRecordSchema = Joi.object({
         'number.min': 'Left arm fat cannot be negative',
         'number.max': 'Left arm fat cannot exceed 50%'
     }),
+    fatLeftArm: Joi.number().min(0).max(50).optional().messages({
+        'number.min': 'Left arm fat cannot be negative',
+        'number.max': 'Left arm fat cannot exceed 50%'
+    }),
     fat_right_leg: Joi.number().min(0).max(50).optional().messages({
+        'number.min': 'Right leg fat cannot be negative',
+        'number.max': 'Right leg fat cannot exceed 50%'
+    }),
+    fatRightLeg: Joi.number().min(0).max(50).optional().messages({
         'number.min': 'Right leg fat cannot be negative',
         'number.max': 'Right leg fat cannot exceed 50%'
     }),
@@ -100,10 +136,19 @@ const healthRecordSchema = Joi.object({
         'number.min': 'Left leg fat cannot be negative',
         'number.max': 'Left leg fat cannot exceed 50%'
     }),
+    fatLeftLeg: Joi.number().min(0).max(50).optional().messages({
+        'number.min': 'Left leg fat cannot be negative',
+        'number.max': 'Left leg fat cannot exceed 50%'
+    }),
     fat_trunk: Joi.number().min(0).max(50).optional().messages({
         'number.min': 'Trunk fat cannot be negative',
         'number.max': 'Trunk fat cannot exceed 50%'
-    })
+    }),
+    fatTrunk: Joi.number().min(0).max(50).optional().messages({
+        'number.min': 'Trunk fat cannot be negative',
+        'number.max': 'Trunk fat cannot exceed 50%'
+    }),
+    notes: Joi.string().optional()
 });
 
 const profileUpdateSchema = Joi.object({
@@ -152,15 +197,47 @@ function validateLogin(req, res, next) {
 }
 
 function validateHealthRecord(req, res, next) {
-    const { error } = healthRecordSchema.validate(req.body);
+    console.log('🔍 Validating health record...');
+    console.log('Body to validate:', req.body);
+    
+    // Create a normalized body for validation
+    const normalizedBody = { ...req.body };
+    
+    // Convert camelCase to snake_case for validation
+    const camelToSnake = {
+        bodyFatPercentage: 'body_fat_percentage',
+        muscleMass: 'muscle_mass',
+        boneMass: 'bone_mass',
+        metabolicAge: 'metabolic_age',
+        waterPercentage: 'water_percentage',
+        visceralFat: 'visceral_fat',
+        fatRightArm: 'fat_right_arm',
+        fatLeftArm: 'fat_left_arm',
+        fatRightLeg: 'fat_right_leg',
+        fatLeftLeg: 'fat_left_leg',
+        fatTrunk: 'fat_trunk'
+    };
+    
+    Object.keys(normalizedBody).forEach(key => {
+        if (camelToSnake[key]) {
+            normalizedBody[camelToSnake[key]] = normalizedBody[key];
+            delete normalizedBody[key];
+        }
+    });
+    
+    console.log('Normalized body for validation:', normalizedBody);
+    
+    const { error } = healthRecordSchema.validate(normalizedBody);
     
     if (error) {
+        console.log('❌ Validation error:', error.details[0].message);
         return res.status(400).json({
             error: 'Validation Error',
             message: error.details[0].message
         });
     }
     
+    console.log('✅ Validation passed');
     next();
 }
 

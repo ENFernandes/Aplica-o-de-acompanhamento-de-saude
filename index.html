@@ -14,22 +14,26 @@
     <div id="loading-indicator" class="flex justify-center items-center h-screen">
         <div class="text-center">
             <svg class="animate-spin h-10 w-10 text-blue-500 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-            <p class="mt-2 text-lg">A carregar a sua aplicação de saúde...</p>
+            <p class="mt-2 text-lg">A verificar autenticação...</p>
+            <p class="mt-1 text-sm text-gray-500">Aguarde um momento...</p>
         </div>
     </div>
 
     <div id="main-content" class="container mx-auto p-4 md:p-6 hidden">
-        <!-- Authentication Area -->
-        <div id="auth-area" class="hidden">
-            <!-- Login, Register, and Password Recovery forms will be inserted here -->
-        </div>
-
         <!-- Main App Area -->
-        <div id="app-area" class="hidden">
-        <header class="text-center mb-8">
-            <h1 class="text-3xl md:text-4xl font-bold text-blue-600">Health Tracker v4</h1>
-            <p class="text-md md:text-lg text-gray-600 mt-2">O seu diário de saúde, agora otimizado</p>
-            <p id="user-id-display" class="text-xs md:text-sm text-gray-500 mt-2 break-all px-2"></p>
+        <div id="app-area">
+        <header class="relative mb-8">
+            <!-- User profile dropdown positioned in top right corner -->
+            <div class="absolute top-0 right-0 z-10">
+                <!-- User profile dropdown will be inserted here by AuthManager -->
+            </div>
+            
+            <!-- Centered title and subtitle -->
+            <div class="text-center">
+                <h1 class="text-3xl md:text-4xl font-bold text-blue-600">MiniBox</h1>
+                <p class="text-md md:text-lg text-gray-600 mt-2">O seu diário de saúde, agora otimizado</p>
+                <p id="user-id-display" class="text-xs md:text-sm text-gray-500 mt-2 break-all px-2"></p>
+            </div>
         </header>
 
         <section class="mb-12 bg-white p-4 md:p-8 rounded-xl shadow-lg">
@@ -92,12 +96,6 @@
                 </div>
                 
                 <div class="col-span-1">
-                    <label class="block text-sm font-medium text-gray-700">Massa Gorda (kg)</label>
-                    <input type="number" step="0.1" name="bodyFatKg" 
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                </div>
-                
-                <div class="col-span-1">
                     <label class="block text-sm font-medium text-gray-700">Massa Muscular (kg)</label>
                     <input type="number" step="0.1" name="muscleMass" 
                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
@@ -155,7 +153,38 @@
 
         <section id="suggestions-section" class="mb-12"><h2 class="text-xl md:text-2xl font-bold mb-4">Sugestões para Melhorar</h2><div id="suggestions-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div></section>
         <section id="charts-section" class="mb-12"><h2 class="text-xl md:text-2xl font-bold mb-6 text-center">Seu Progresso Visual</h2><div class="grid grid-cols-1 lg:grid-cols-2 gap-8"><div class="bg-white p-4 md:p-6 rounded-xl shadow-lg"><div class="chart-container"><canvas id="weightBmiChart"></canvas></div></div><div class="bg-white p-4 md:p-6 rounded-xl shadow-lg"><div class="chart-container"><canvas id="compositionChart"></canvas></div></div><div class="bg-white p-4 md:p-6 rounded-xl shadow-lg lg:col-span-2"><div class="chart-container max-w-xl mx-auto"><canvas id="fatDistributionChart"></canvas></div></div></div></section>
-        <section id="history-section"><h2 class="text-xl md:text-2xl font-bold mb-4">Histórico de Registros</h2><div class="overflow-x-auto"><table class="w-full text-sm text-left text-gray-500"><thead class="text-xs text-gray-700 uppercase bg-gray-50 hidden md:table-header-group"><tr><th scope="col" class="py-3 px-4">Data</th><th scope="col" class="py-3 px-4">Peso</th><th scope="col" class="py-3 px-4">% Gordura</th><th scope="col" class="py-3 px-4">Massa Muscular</th><th scope="col" class="py-3 px-4">IMC</th><th scope="col" class="py-3 px-4">Gordura Visceral</th><th scope="col" class="py-3 px-4">% Água</th><th scope="col" class="py-3 px-4">Idade Metabólica</th><th scope="col" class="py-3 px-4 text-center">Ações</th></tr></thead><tbody id="history-table-body"></tbody></table></div></section>
+        <section id="history-section">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl md:text-2xl font-bold">Histórico de Registros</h2>
+                <div class="flex gap-2">
+                    <button onclick="testCharts()" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm">
+                    📊 Testar Gráficos
+                </button>
+                <button onclick="reloadHealthData()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm">
+                    🔄 Recarregar Dados
+                </button>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left text-gray-500">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-50 hidden md:table-header-group">
+                        <tr>
+                            <th scope="col" class="py-3 px-4">Data</th>
+                            <th scope="col" class="py-3 px-4">Peso</th>
+                            <th scope="col" class="py-3 px-4">% Gordura</th>
+                            <th scope="col" class="py-3 px-4">Massa Muscular</th>
+                            <th scope="col" class="py-3 px-4">IMC</th>
+                            <th scope="col" class="py-3 px-4">Gordura Visceral</th>
+                            <th scope="col" class="py-3 px-4">% Água</th>
+                            <th scope="col" class="py-3 px-4">Idade Metabólica</th>
+                            <th scope="col" class="py-3 px-4 text-center">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-table-body">
+                    </tbody>
+                </table>
+            </div>
+        </section>
         </div>
     </div>
 
@@ -345,6 +374,9 @@
             }
         }
     </script>
+
+    <!-- Load main application script -->
+    <script type="module" src="src/js/main.js"></script>
 
 </body>
 </html>
