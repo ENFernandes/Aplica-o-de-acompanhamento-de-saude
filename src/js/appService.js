@@ -2,7 +2,7 @@
 import { ValidationService } from './validationService.js';
 import { UIService } from './uiService.js';
 import { ChartService } from './chartService.js';
-import { tableFields } from '../data/initialData.js';
+import { tableFields } from '../../../../src/data/initialData.js';
 
 export class AppService {
     constructor() {

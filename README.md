@@ -101,14 +101,21 @@ npm start
 
 ### 3. Execução do Frontend
 ```bash
-# Navegue para a pasta do projeto
-cd "Aplicação de Acompanhamento de Saúde"
+# Navegue para a pasta do frontend
+cd frontend
 
-# Inicie um servidor local
-python -m http.server 8000
+# Instale as dependências
+npm install
+
+# Inicie o servidor de desenvolvimento
+npm run dev
+
+# Ou use os scripts de inicialização:
+# Windows: start.bat
+# Linux/Mac: ./start.sh
 
 # Abra no navegador
-# http://localhost:8000
+# http://localhost:3000
 ```
 
 ## 📊 Funcionalidades Principais

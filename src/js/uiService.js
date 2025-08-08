@@ -1,6 +1,6 @@
 // UI service for notifications and modal management
 import { ValidationService } from './validationService.js';
-import { tableFields } from '../data/initialData.js';
+import { tableFields } from '../../../../src/data/initialData.js';
 
 export class UIService {
     constructor() {

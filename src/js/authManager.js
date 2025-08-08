@@ -1,6 +1,6 @@
 // Authentication manager to handle auth flow and UI state
 import { AuthService } from './authService.js';
-import { AuthComponents } from '../components/authComponents.js';
+import { AuthComponents } from '../../../../src/components/authComponents.js';
 import { UIService } from './uiService.js';
 
 export class AuthManager {
@@ -202,11 +202,11 @@ export class AuthManager {
             // Find the top right corner container
             const topRightContainer = header.querySelector('.absolute.top-0.right-0');
             if (topRightContainer) {
-                // Remove any existing user profile elements
+            // Remove any existing user profile elements
                 const existingProfile = topRightContainer.querySelector('.relative');
-                if (existingProfile) {
-                    existingProfile.remove();
-                }
+            if (existingProfile) {
+                existingProfile.remove();
+            }
                 
                 // Create a flex container for vertical stacking
                 const flexContainer = document.createElement('div');
@@ -255,7 +255,7 @@ export class AuthManager {
                 topRightContainer.appendChild(flexContainer);
             } else {
                 console.log('Top right container not found, adding to header');
-                header.insertAdjacentHTML('beforeend', userProfileHTML);
+            header.insertAdjacentHTML('beforeend', userProfileHTML);
             }
         }
         
@@ -376,8 +376,8 @@ export class AuthManager {
         // Check if e is an event object or if we're being called directly
         if (e && e.preventDefault && typeof e.preventDefault === 'function') {
             // Called as event handler
-            e.preventDefault();
-            const formData = new FormData(e.target);
+        e.preventDefault();
+        const formData = new FormData(e.target);
             email = formData.get('email');
             password = formData.get('password');
 
@@ -421,8 +421,8 @@ export class AuthManager {
                         window.location.href = 'admin/admin.html';
                     } else {
                         // Show app normally
-                        this.uiService.showToast('Login realizado com sucesso!', false);
-                        this.showApp(result.user);
+                this.uiService.showToast('Login realizado com sucesso!', false);
+                this.showApp(result.user);
                     }
                 }
             }
@@ -447,8 +447,8 @@ export class AuthManager {
         // Check if e is an event object or if we're being called directly
         if (e && e.preventDefault && typeof e.preventDefault === 'function') {
             // Called as event handler
-            e.preventDefault();
-            const formData = new FormData(e.target);
+        e.preventDefault();
+        const formData = new FormData(e.target);
             name = formData.get('name');
             email = formData.get('email');
             password = formData.get('password');
@@ -469,7 +469,7 @@ export class AuthManager {
                     showStatus('As passwords não coincidem', 'error');
                 }
             } else {
-                this.uiService.showToast('As passwords não coincidem');
+            this.uiService.showToast('As passwords não coincidem');
             }
             return;
         }
@@ -482,7 +482,7 @@ export class AuthManager {
                     showStatus('A password deve ter pelo menos 6 caracteres', 'error');
                 }
             } else {
-                this.uiService.showToast('A password deve ter pelo menos 6 caracteres');
+            this.uiService.showToast('A password deve ter pelo menos 6 caracteres');
             }
             return;
         }
@@ -496,7 +496,7 @@ export class AuthManager {
                         showStatus('Registo realizado com sucesso! Agora pode fazer login com as suas credenciais.', 'success');
                     }
                 } else {
-                    this.uiService.showToast('Registo realizado com sucesso! Agora pode fazer login com as suas credenciais.', false);
+                this.uiService.showToast('Registo realizado com sucesso! Agora pode fazer login com as suas credenciais.', false);
                 }
                 // Show login page instead of app after successful registration
                 this.showLogin();
@@ -513,8 +513,8 @@ export class AuthManager {
         // Check if e is an event object or if we're being called directly
         if (e && e.preventDefault && typeof e.preventDefault === 'function') {
             // Called as event handler
-            e.preventDefault();
-            const formData = new FormData(e.target);
+        e.preventDefault();
+        const formData = new FormData(e.target);
             email = formData.get('email');
         } else {
             // Called directly with parameters
@@ -604,7 +604,7 @@ export class AuthManager {
             );
             
             // Attach dropdown toggle event
-            const userMenuBtn = document.getElementById('user-menu-btn');
+        const userMenuBtn = document.getElementById('user-menu-btn');
             const userMenuDropdown = document.getElementById('user-menu-dropdown');
             
             if (userMenuBtn && userMenuDropdown) {
@@ -723,8 +723,8 @@ export class AuthManager {
         if (heightInput && user.height) {
             heightInput.value = user.height;
             if (isViewingAnotherUser) {
-                heightInput.readOnly = true;
-                heightInput.classList.add('bg-gray-100', 'cursor-not-allowed');
+            heightInput.readOnly = true;
+            heightInput.classList.add('bg-gray-100', 'cursor-not-allowed');
             } else {
                 heightInput.readOnly = false;
                 heightInput.classList.remove('bg-gray-100', 'cursor-not-allowed');
