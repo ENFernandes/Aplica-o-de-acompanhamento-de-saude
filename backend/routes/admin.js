@@ -2,6 +2,80 @@ const express = require('express');
 const router = express.Router();
 const { pool } = require('../config/database');
 const { requireAdmin, checkAdminStatus, promoteToAdmin, demoteFromAdmin } = require('../middleware/adminAuth');
+const bcrypt = require('bcryptjs');
+
+// Create new user
+router.post('/users', requireAdmin, async (req, res) => {
+    try {
+        const { name, email, phone, tax_id, address, height, birthday, password } = req.body;
+
+        // Validate required fields
+        if (!name || !email || !password) {
+            return res.status(400).json({ error: 'Nome, email e password são obrigatórios' });
+        }
+
+        // Check if email already exists
+        const existingUser = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
+        if (existingUser.rows.length > 0) {
+            return res.status(400).json({ error: 'Email já está registado' });
+        }
+
+        // Hash password
+        const saltRounds = 10;
+        const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+        // Insert new user
+        const result = await pool.query(`
+            INSERT INTO users (name, email, phone, tax_id, address, height, birthday, password_hash, created_at)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
+            RETURNING id, name, email, phone, tax_id, address, height, birthday, created_at
+        `, [name, email, phone, tax_id, address, height, birthday, hashedPassword]);
+
+        const newUser = result.rows[0];
+
+        res.status(201).json({
+            success: true,
+            message: 'Utilizador criado com sucesso',
+            user: newUser
+        });
+    } catch (error) {
+        console.error('Error creating user:', error);
+        res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+});
+
+// Reset user password
+router.post('/users/:userId/reset-password', requireAdmin, async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { newPassword } = req.body;
+
+        if (!newPassword || newPassword.length < 6) {
+            return res.status(400).json({ error: 'Password deve ter pelo menos 6 caracteres' });
+        }
+
+        // Check if user exists
+        const userCheck = await pool.query('SELECT id, name FROM users WHERE id = $1', [userId]);
+        if (userCheck.rows.length === 0) {
+            return res.status(404).json({ error: 'Utilizador não encontrado' });
+        }
+
+        // Hash new password
+        const saltRounds = 10;
+        const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+
+        // Update password
+        await pool.query('UPDATE users SET password_hash = $1 WHERE id = $2', [hashedPassword, userId]);
+
+        res.json({
+            success: true,
+            message: `Password do utilizador "${userCheck.rows[0].name}" alterada com sucesso`
+        });
+    } catch (error) {
+        console.error('Error resetting password:', error);
+        res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+});
 
 // Check admin status
 router.get('/check', checkAdminStatus, async (req, res) => {
