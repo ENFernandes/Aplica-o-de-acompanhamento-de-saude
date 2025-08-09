@@ -14,6 +14,8 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      // Explicit alias to satisfy CI/rollup resolving without extension
+      "src/lib/utils": path.resolve(__dirname, "./src/lib/utils.ts"),
     },
   },
 }));
