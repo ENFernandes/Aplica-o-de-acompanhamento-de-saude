@@ -1,0 +1,30 @@
+{
+  "$schema": "https://railway.app/railway.schema.json",
+  "project": "minibox-health-tracker",
+  "plugins": [],
+  "services": [
+    {
+      "name": "backend",
+      "path": "backend",
+      "startCommand": "node server.js",
+      "installCommand": "npm ci",
+      "buildCommand": "echo 'no build'",
+      "envs": {
+        "NODE_ENV": "production",
+        "PORT": "3000"
+      }
+    },
+    {
+      "name": "frontend",
+      "path": "frontend",
+      "installCommand": "npm ci",
+      "buildCommand": "npm run build",
+      "startCommand": "npm run preview",
+      "envs": {
+        "PORT": "8000"
+      }
+    }
+  ]
+}
+
+

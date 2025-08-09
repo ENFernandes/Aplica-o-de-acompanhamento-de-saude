@@ -1,0 +1,69 @@
+name: CI
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: health
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd="pg_isready -U postgres" --health-interval=10s --health-timeout=5s --health-retries=5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install deps (backend)
+        working-directory: backend
+        run: npm ci
+
+      - name: Run backend tests
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/health
+          NODE_ENV: test
+        run: npm test
+
+      - name: Install deps (frontend)
+        working-directory: frontend
+        run: npm ci
+
+      - name: Lint (frontend)
+        working-directory: frontend
+        run: npm run lint -- --max-warnings=0
+
+      - name: Build (frontend)
+        working-directory: frontend
+        run: npm run build
+
+  pr-gate:
+    if: github.event_name == 'push'
+    needs: test-and-build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create pull request to main
+        uses: peter-evans/create-pull-request@v6
+        with:
+          branch: auto/pr-${{ github.sha }}
+          title: "Auto PR: CI passed for ${GITHUB_SHA}"
+          body: "CI green. Please review and approve to deploy."
+          base: main
+
+
