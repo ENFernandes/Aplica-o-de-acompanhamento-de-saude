@@ -2,18 +2,10 @@
 encode zstd gzip
 root * /usr/share/caddy
 
-# Proxy API under the same domain (miniboxgym.pt) via /api -> backend
-# Set env var API_UPSTREAM in Railway to your backend public URL,
-# e.g., https://your-backend.up.railway.app
 handle /api/* {
-    reverse_proxy {$API_UPSTREAM} {
-        # Ensure upstream gets its own Host header
-        header_up Host {upstream_hostport}
-    }
+    reverse_proxy {$API_UPSTREAM}
 }
 
-# SPA fallback
 try_files {path} /index.html
-
-# Static file server
 file_server
+
