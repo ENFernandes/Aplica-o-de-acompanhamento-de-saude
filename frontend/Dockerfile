@@ -2,8 +2,11 @@
 # --- Build stage (Vite) ---
 FROM node:20 AS build
 WORKDIR /app
-COPY package*.json ./
-RUN npm ci
+# copia o lockfile se existir
+COPY package.json package-lock.json* ./
+# usa ci se houver lock, senão faz install
+RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi
+
 COPY . .
 # Build with Vite; uses .env.production if present
 RUN npm run build
