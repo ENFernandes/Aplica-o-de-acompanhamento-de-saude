@@ -13,11 +13,9 @@ export default defineConfig(({ mode }) => ({
   ],
   resolve: {
     alias: [
-      { find: '@', replacement: path.resolve(__dirname, './src') },
+      // Put the specific mapping first so it takes precedence over '@'
       { find: '@/lib/utils', replacement: path.resolve(__dirname, './src/lib/utils.ts') },
-      // Fallback patterns some plugins may emit
-      { find: /^src\/lib\/utils$/, replacement: path.resolve(__dirname, './src/lib/utils.ts') },
-      { find: /^\/src\/lib\/utils$/, replacement: path.resolve(__dirname, './src/lib/utils.ts') },
+      { find: '@', replacement: path.resolve(__dirname, './src') },
     ],
   },
 }));
