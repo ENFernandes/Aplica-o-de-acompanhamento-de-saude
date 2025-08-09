@@ -1,11 +1,14 @@
 name: CI
 
 on:
-  workflow_dispatch:
-  push:
-    branches-ignore: [ master, main ]
+  push: {}
   pull_request:
     branches: [ master, main ]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   test-and-build:
@@ -55,7 +58,7 @@ jobs:
         run: npm run build
 
   pr-gate:
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' && (github.ref != 'refs/heads/master' && github.ref != 'refs/heads/main')
     needs: test-and-build
     runs-on: ubuntu-latest
     steps:
