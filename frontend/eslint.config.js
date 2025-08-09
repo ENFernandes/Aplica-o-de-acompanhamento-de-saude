@@ -19,11 +19,19 @@ export default tseslint.config(
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
+      // Allow colocated utility exports in component files
       "react-refresh/only-export-components": [
-        "warn",
+        "off",
         { allowConstantExport: true },
       ],
+      // Empty interfaces are sometimes used as extension points in UI
+      "@typescript-eslint/no-empty-object-type": "off",
+      // Tailwind config may use require()
+      "@typescript-eslint/no-require-imports": "off",
+      // Keep unused-vars relaxed for generated patterns
       "@typescript-eslint/no-unused-vars": "off",
+      // Allow empty catch blocks
+      "no-empty": ["error", { "allowEmptyCatch": true }],
     },
   }
 );
