@@ -18,8 +18,8 @@
       "name": "frontend",
       "path": "frontend",
       "installCommand": "npm ci",
-      "buildCommand": "npm run build",
-      "startCommand": "npm run preview",
+      // "buildCommand": "npm run build",
+      // "startCommand": "npm run preview",
       "envs": {
         "PORT": "8000"
       }
