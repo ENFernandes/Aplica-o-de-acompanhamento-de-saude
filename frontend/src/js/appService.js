@@ -10,6 +10,8 @@ export class AppService {
         this.healthDataCollection = null;
         this.localHealthRecords = [];
         this.editingRowId = null;
+        // Reference to auth manager if available
+        this.authManager = (typeof window !== 'undefined' && window.globalAuthManager) ? window.globalAuthManager : null;
         
         // Initialize services
         this.uiService = new UIService();
@@ -37,17 +39,14 @@ export class AppService {
                         const userActive = localStorage.getItem('userActive');
                         if (userActive) {
                             this.userId = userActive;
-                            console.log('Using UserActive ID:', userActive);
                         } else {
                             this.userId = payload.userId;
-                            console.log('Using token userId:', payload.userId);
                         }
                         await this.setupAuth();
                     } else {
                         // Token expired or invalid
                         localStorage.removeItem('auth-token');
                         localStorage.removeItem('userActive');
-                        console.log('Token expired or invalid');
                         return;
                     }
                 } catch (error) {
@@ -57,7 +56,7 @@ export class AppService {
                     return;
                 }
             } else {
-                console.log('No auth token found');
+                // No auth token found
                 return;
             }
         } catch (error) {
@@ -78,28 +77,28 @@ export class AppService {
         }
     }
 
-    async seedInitialData() {
-        console.log('Skipping initial data seeding');
-    }
+    async seedInitialData() {}
 
     async loadHealthData() {
         try {
             const token = localStorage.getItem('auth-token');
-            if (!token) {
-                console.log('No auth token found, skipping data load');
-                return;
-            }
+            if (!token) return;
 
-            // Check if we have a UserActive set
+            // Decide endpoint: only use /api/users/:id/health-records when admin is viewing another user
             const userActive = localStorage.getItem('userActive');
             let endpoint = 'http://localhost:3000/api/health-records';
             
             if (userActive) {
-                // Use the specific user endpoint if we have a UserActive
-                endpoint = `http://localhost:3000/api/users/${userActive}/health-records`;
-                console.log('Using UserActive endpoint for health records:', endpoint);
-            } else {
-                console.log('Using authenticated user endpoint for health records:', endpoint);
+                try {
+                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    const isAdmin = payload?.role === 'admin';
+                    const isViewingAnotherUser = userActive && userActive !== String(payload?.userId);
+                    if (isAdmin && isViewingAnotherUser) {
+                        endpoint = `http://localhost:3000/api/users/${userActive}/health-records`;
+                    }
+                } catch (_) {
+                    // ignore payload parse errors; default endpoint is used
+                }
             }
 
             const response = await fetch(endpoint, {
@@ -145,7 +144,6 @@ export class AppService {
             });
             
             this.updateUI();
-            console.log('Health records loaded:', this.localHealthRecords.length);
         } catch (error) {
             console.error('Error loading health data:', error);
             this.uiService.showToast('Erro ao carregar dados de saúde');
@@ -166,8 +164,6 @@ export class AppService {
             this.chartService.initializeCharts();
             this.chartService.updateCharts(this.localHealthRecords);
         }, 100);
-        
-        console.log('UI updated with', this.localHealthRecords.length, 'records');
     }
 
     async handleFormSubmit(e) {
@@ -211,8 +207,7 @@ export class AppService {
                 throw new Error(errorData.error || 'Erro ao guardar no servidor');
             }
 
-            const result = await response.json();
-            console.log('Health record saved successfully:', result);
+            await response.json();
 
             await this.uiService.resetForm();
             this.uiService.showToast("Novo registo guardado com sucesso!", false);
@@ -280,8 +275,7 @@ export class AppService {
                 throw new Error(errorData.error || 'Erro ao atualizar no servidor');
             }
 
-            const result = await response.json();
-            console.log('Health record updated successfully:', result);
+            await response.json();
             
             this.uiService.showToast("Registo atualizado com sucesso!", false);
             // Exit edit mode
@@ -340,22 +334,12 @@ export class AppService {
     
     setHeightFromProfile() {
         try {
-            const currentUser = this.authManager.getCurrentUser();
-            if (currentUser) {
-                const heightInput = document.getElementById('height');
-                if (heightInput && currentUser.height) {
-                    heightInput.value = currentUser.height;
-                    heightInput.readOnly = true;
-                    heightInput.classList.add('bg-gray-100', 'cursor-not-allowed');
-                    console.log('Height set from user profile in AppService:', currentUser.height);
-                } else if (heightInput && !currentUser.height) {
-                    // If no height in profile, show placeholder
-                    heightInput.placeholder = 'Defina a sua altura no perfil';
-                    console.log('No height in profile, showing placeholder');
-                }
+            // Delegate to UIService which fetches the profile and fills height/age
+            if (this.uiService && typeof this.uiService.populateHeightAndAge === 'function') {
+                this.uiService.populateHeightAndAge();
             }
         } catch (error) {
-            console.log('Could not set height from profile in AppService:', error);
+            console.error('Could not set height from profile in AppService:', error);
         }
     }
 } 

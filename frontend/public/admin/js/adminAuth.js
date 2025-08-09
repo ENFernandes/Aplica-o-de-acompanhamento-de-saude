@@ -49,7 +49,8 @@ export class AdminAuthService {
     logout() {
         this.currentAdmin = null;
         this.isAuthenticated = false;
-        localStorage.removeItem('auth-token');
+        try { sessionStorage.clear(); } catch (_) {}
+        try { localStorage.clear(); } catch (_) {}
         window.location.href = '../login.html';
     }
 
@@ -91,19 +92,17 @@ export class AdminAuthManager {
 
     // Initialize admin authentication
     async initialize() {
-        console.log('Initializing admin authentication...');
+        // Initialize admin authentication
         
         try {
             const { isAdmin, admin } = await this.authService.checkAdminStatus();
             
             if (isAdmin && admin) {
-                console.log('Admin authenticated:', admin);
                 this.authService.showAdminInterface();
                 this.updateAdminProfile(admin);
                 this.setupNavigation();
                 return true;
             } else {
-                console.log('Not an admin, redirecting to login...');
                 this.authService.showErrorAndRedirect('Acesso de administrador necessário');
                 return false;
             }
@@ -217,13 +216,7 @@ export class AdminAuthManager {
             });
         }
 
-        // Notifications button
-        const notificationsBtn = document.getElementById('notifications-btn');
-        if (notificationsBtn) {
-            notificationsBtn.addEventListener('click', () => {
-                this.toggleNotificationsPanel();
-            });
-        }
+        // Notifications removed
 
         // Close notifications panel when clicking outside
         document.addEventListener('click', (e) => {
@@ -305,18 +298,7 @@ export class AdminAuthManager {
         }
     }
 
-    // Toggle notifications panel
-    toggleNotificationsPanel() {
-        console.log('Toggle notifications panel called');
-        const panel = document.getElementById('notifications-panel');
-        console.log('Notifications panel found:', !!panel);
-        if (panel) {
-            panel.classList.toggle('hidden');
-            console.log('Panel hidden status:', panel.classList.contains('hidden'));
-        } else {
-            console.error('Notifications panel not found!');
-        }
-    }
+    // Notifications removed
 
     // Get auth service
     getAuthService() {

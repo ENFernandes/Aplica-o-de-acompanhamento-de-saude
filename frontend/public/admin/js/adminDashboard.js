@@ -188,12 +188,10 @@ export class AdminDashboardManager {
 
     // Initialize dashboard
     async initialize() {
-        console.log('Initializing admin dashboard...');
         
         try {
             this.dashboardService.initializeCharts();
             await this.dashboardService.loadDashboardData();
-            console.log('Dashboard initialized successfully');
         } catch (error) {
             console.error('Error initializing dashboard:', error);
         }
@@ -231,7 +229,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             // Make dashboard manager globally available
             window.adminDashboardManager = dashboardManager;
-            console.log('Admin dashboard initialized successfully');
         }
     }, 1000);
 }); 

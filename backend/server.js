@@ -8,10 +8,11 @@ const authRoutes = require('./routes/auth');
 const healthRecordsRoutes = require('./routes/healthRecords');
 const usersRoutes = require('./routes/users');
 const adminRoutes = require('./routes/admin');
+const publicRoutes = require('./routes/public');
 const { testDatabaseConnection } = require('./config/database');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 3000;
 
 // Security middleware
 app.use(helmet());
@@ -57,6 +58,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/health-records', healthRecordsRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/public', publicRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {
@@ -92,9 +94,7 @@ app.use((error, req, res, next) => {
 
 // Start server
 app.listen(PORT, () => {
-    console.log(`🚀 Health Tracker API server running on port ${PORT}`);
-    console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
-    console.log(`🔗 Health check: http://localhost:${PORT}/api/health`);
+    console.log(`Server running on port ${PORT} - env: ${process.env.NODE_ENV || 'development'} - health: http://localhost:${PORT}/api/health`);
 });
 
 module.exports = app; 

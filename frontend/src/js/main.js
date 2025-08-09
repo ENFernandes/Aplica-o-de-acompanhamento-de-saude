@@ -1,5 +1,4 @@
 // Main application entry point
-console.log('main.js loaded');
 
 // Global variables to store app instances
 let globalAppService = null;
@@ -7,12 +6,10 @@ let globalAuthManager = null;
 
 // Global function to reload data when user logs in from another page
 window.reloadHealthData = async function() {
-    console.log('🔄 Reloading health data...');
     if (globalAppService) {
         await globalAppService.loadHealthData();
-        console.log('✅ Health data reloaded');
     } else {
-        console.log('❌ AppService not initialized');
+        // AppService not initialized
     }
 };
 
@@ -31,61 +28,46 @@ window.logout = function() {
 // Global function to test charts
 window.testCharts = function() {
     if (globalAppService && globalAppService.chartService) {
-        console.log('Testing charts...');
         globalAppService.chartService.initializeCharts();
         globalAppService.chartService.updateCharts(globalAppService.localHealthRecords);
     } else {
-        console.log('Chart service not available');
+        // Chart service not available
     }
 };
 
 // Initialize the application when the DOM is loaded
 document.addEventListener('DOMContentLoaded', async () => {
-    console.log('DOM loaded, starting initialization...');
     
     try {
-        console.log('DOM loaded, initializing application...');
         
         // Import modules dynamically
-        console.log('Importing modules...');
         const { AppService } = await import('./appService.js');
         const { AuthManager } = await import('./authManager.js');
         const { ProfilePopulatorService } = await import('./profilePopulator.js');
 
         // Initialize auth manager first
-        console.log('Initializing AuthManager...');
         globalAuthManager = new AuthManager();
         
         // Initialize app service
-        console.log('Initializing AppService...');
         globalAppService = new AppService();
         globalAppService.setupEventListeners();
         
         // Initialize profile populator service
-        console.log('Initializing ProfilePopulatorService...');
         const profilePopulator = new ProfilePopulatorService();
         
         // Check authentication status
-        console.log('Checking authentication status...');
         const authResult = await globalAuthManager.checkAuthStatus();
         
         if (authResult.isAuthenticated) {
-            console.log('User authenticated, initializing app...');
             
             // Check if we have a UserActive set (from BackOffice)
             const userActive = localStorage.getItem('userActive');
-            if (userActive) {
-                console.log('UserActive found:', userActive);
-                // The AuthManager will handle loading the user profile
-            }
+            // AuthManager handles loading the user profile when userActive exists
             
             await globalAppService.initialize();
         } else {
-            console.log('User not authenticated, redirecting to login...');
             window.location.href = 'login.html';
         }
-        
-        console.log('Application initialization complete');
     } catch (error) {
         console.error('Failed to initialize application:', error);
         
@@ -109,11 +91,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // Set current date in date input on page load
 window.addEventListener('load', async () => {
-    console.log('Window loaded');
     const dateInput = document.getElementById('date');
     if (dateInput) {
         dateInput.value = new Date().toISOString().split('T')[0];
-        console.log('Date input set to current date');
     }
     
     // Set height and age from user profile if available
@@ -122,13 +102,12 @@ window.addEventListener('load', async () => {
         const uiService = new UIService();
         await uiService.populateHeightAndAge();
     } catch (error) {
-        console.log('Could not populate height/age from profile:', error);
+        console.error('Could not populate height/age from profile:', error);
     }
     
     // Check if user just logged in and reload data
     const token = localStorage.getItem('auth-token');
     if (token && globalAppService) {
-        console.log('🔄 User has token, reloading data...');
         setTimeout(async () => {
             await globalAppService.loadHealthData();
         }, 1000);
@@ -141,29 +120,18 @@ setTimeout(() => {
     const loadingIndicator = document.getElementById('loading-indicator');
     const appArea = document.getElementById('app-area');
     
-    console.log('Fallback timeout triggered (10 seconds)');
-    console.log('Loading indicator:', loadingIndicator);
-    console.log('Main content:', mainContent);
-    console.log('App area:', appArea);
-    
     // Only show content if loading indicator is still visible (meaning main flow didn't complete)
     if (loadingIndicator && !loadingIndicator.classList.contains('hidden')) {
-        console.log('Fallback: Loading indicator still visible after 10s, showing content');
         loadingIndicator.classList.add('hidden');
-        console.log('Fallback: Loading indicator hidden');
         
         if (mainContent) {
         mainContent.classList.remove('hidden');
-            console.log('Fallback: Main content shown');
         }
         if (appArea) {
             appArea.classList.remove('hidden');
-            console.log('Fallback: App area shown');
         }
-        
-        console.log('Fallback: Basic content should now be visible');
     } else {
-        console.log('Fallback: Loading indicator already hidden or not found, main flow completed successfully');
+        // main flow completed
     }
 }, 10000); // Increased from 5000 to 10000ms
 
@@ -197,15 +165,12 @@ window.checkAuthAndRedirect = function() {
         const currentTime = Math.floor(Date.now() / 1000);
         
         if (payload.exp && payload.exp > currentTime && payload.userId && payload.email) {
-            console.log('✅ Valid token found, staying on current page');
             return true;
         } else {
-            console.log('❌ Invalid token, redirecting to login');
             localStorage.removeItem('auth-token');
             return false;
         }
     } catch (error) {
-        console.log('❌ Token validation error, redirecting to login');
         localStorage.removeItem('auth-token');
         return false;
     }

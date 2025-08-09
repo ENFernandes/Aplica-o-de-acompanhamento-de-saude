@@ -33,14 +33,6 @@
                     </div>
                     
                     <div class="flex items-center space-x-4">
-                        <!-- Notifications Button -->
-                        <button id="notifications-btn" class="relative p-2 text-gray-700 hover:text-gray-900">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5zM9 7H4a2 2 0 00-2 2v10a2 2 0 002 2h5l5-5V9a2 2 0 00-2-2z"></path>
-                            </svg>
-                            <span id="notifications-count" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center hidden">0</span>
-                        </button>
-                        
                         <!-- Admin Profile -->
                         <div class="relative">
                             <button id="admin-profile-btn" class="flex items-center space-x-2 text-gray-700 hover:text-gray-900">
@@ -363,7 +355,7 @@
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Altura</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">IMC</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">% Gordura</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                                    
                                 </tr>
                             </thead>
                             <tbody id="data-table-body" class="bg-white divide-y divide-gray-200">
@@ -398,53 +390,24 @@
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Máximo de Registos por Utilizador</label>
                                 <input type="number" id="max-records" value="1000" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                             </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">WhatsApp (número com indicativo)</label>
+                                <input type="text" id="whatsapp-number" placeholder="351912345678" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <p class="text-xs text-gray-500 mt-1">Ex.: 351912345678 (sem +, espaços ou símbolos). Atualiza o botão "Falar no WhatsApp" da landing page.</p>
+                            </div>
                             <button id="save-settings" class="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
                                 💾 Guardar Configurações
                             </button>
                         </div>
                     </div>
 
-                    <!-- Notification Settings -->
-                    <div class="bg-white rounded-lg shadow p-6">
-                        <h3 class="text-lg font-medium text-gray-900 mb-4">Configurações de Notificações</h3>
-                        <div class="space-y-4">
-                            <div class="flex items-center justify-between">
-                                <span class="text-sm font-medium text-gray-700">Notificações por Email</span>
-                                <label class="relative inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" id="email-notifications" class="sr-only peer" checked>
-                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                                </label>
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <span class="text-sm font-medium text-gray-700">Alertas de Sistema</span>
-                                <label class="relative inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" id="system-alerts" class="sr-only peer" checked>
-                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                                </label>
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <span class="text-sm font-medium text-gray-700">Relatórios Automáticos</span>
-                                <label class="relative inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" id="auto-reports" class="sr-only peer">
-                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
+                    
                 </div>
             </section>
         </main>
     </div>
 
-    <!-- Notifications Panel -->
-    <div id="notifications-panel" class="fixed right-4 top-20 w-80 bg-white rounded-lg shadow-lg border border-gray-200 hidden z-40">
-        <div class="p-4 border-b border-gray-200">
-            <h3 class="text-lg font-medium text-gray-900">Notificações</h3>
-        </div>
-        <div id="notifications-list" class="max-h-96 overflow-y-auto">
-            <!-- Notifications will be loaded here -->
-        </div>
-    </div>
+    
 
     <!-- Admin Profile Modal -->
     <div id="admin-profile-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
@@ -489,6 +452,6 @@
     <script type="module" src="admin/js/createUser.js"></script>
     <script type="module" src="admin/js/dataManagement.js"></script>
     <script type="module" src="admin/js/adminSettings.js"></script>
-    <script type="module" src="admin/js/adminNotifications.js"></script>
+    
 </body>
 </html> 

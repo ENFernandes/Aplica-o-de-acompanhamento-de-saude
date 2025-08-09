@@ -174,11 +174,9 @@ export class UserManagementService {
 
     // Open user profile in main app
     async openUserProfile(userId) {
-        console.log('=== openUserProfile called with userId:', userId);
-        console.log('Current users array:', this.users);
+        // Open user profile in main app
         
         const user = this.users.find(u => u.id.toString() === userId.toString());
-        console.log('Found user:', user);
         
         if (!user) {
             console.warn('User not found for ID:', userId);
@@ -186,17 +184,12 @@ export class UserManagementService {
         }
 
         // Set this user as the active user using the UserActive system
-        console.log('Setting userActive to:', userId);
         localStorage.setItem('userActive', userId);
-        console.log('UserActive set to:', userId);
-        console.log('localStorage.getItem("userActive"):', localStorage.getItem('userActive'));
         
         // Set a flag to indicate this user came from BackOffice
         localStorage.setItem('userFromBackOffice', 'true');
-        console.log('Set userFromBackOffice flag to true');
         
         // Redirect to main app
-        console.log('Redirecting to personalArea.html...');
         window.location.href = 'personalArea.html';
     }
 
@@ -236,7 +229,6 @@ export class UserManagementService {
 
     // Delete user
     async deleteUser(userId) {
-        console.log('deleteUser called with userId:', userId);
         const user = this.users.find(u => u.id.toString() === userId.toString());
         
         if (!user) {
@@ -274,7 +266,6 @@ export class UserManagementService {
 
     // Reset user password
     async resetPassword(userId) {
-        console.log('resetPassword called with userId:', userId);
         const user = this.users.find(u => u.id.toString() === userId.toString());
         
         if (!user) {
@@ -304,9 +295,7 @@ export class UserManagementService {
 
         try {
             const token = localStorage.getItem('auth-token');
-            console.log('Token for reset password:', token ? 'Token exists' : 'No token');
-            console.log('User ID for reset password:', userId);
-            console.log('New password length:', newPassword.length);
+            // prepare request
             
             const response = await fetch(`${this.baseUrl}/api/admin/users/${userId}/reset-password`, {
                 method: 'POST',
@@ -319,14 +308,11 @@ export class UserManagementService {
                 })
             });
 
-            console.log('Response status:', response.status);
-            console.log('Response ok:', response.ok);
 
             if (response.ok) {
                 alert(`Password do utilizador "${user.name}" alterada com sucesso!`);
             } else {
                 const error = await response.json();
-                console.log('Error response:', error);
                 alert(`Erro ao alterar password: ${error.error}`);
             }
         } catch (error) {
@@ -381,11 +367,11 @@ export class UserManagementManager {
 
     // Initialize user management
     async initialize() {
-        console.log('Initializing user management...');
+        // init
         
         try {
             await this.userService.loadUsers();
-            console.log('User management initialized successfully');
+            // loaded
         } catch (error) {
             console.error('Error initializing user management:', error);
         }
@@ -437,7 +423,7 @@ export class UserManagementManager {
 
 // Initialize user management when DOM is loaded
 document.addEventListener('DOMContentLoaded', async () => {
-    console.log('DOM loaded, initializing user management...');
+        // bootstrap
     
     try {
         // Create the user management instance immediately
@@ -466,9 +452,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             isReady: true
         };
         
-        console.log('User management initialized successfully');
-        console.log('Available methods:', Object.keys(window.userManagement));
-        console.log('userManagement object:', window.userManagement);
         
     } catch (error) {
         console.error('Error initializing user management:', error);

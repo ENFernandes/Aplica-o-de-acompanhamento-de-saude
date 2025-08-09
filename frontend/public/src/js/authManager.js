@@ -15,31 +15,26 @@ export class AuthManager {
     // UserActive System - Manages the currently active user ID
     setUserActive(userId) {
         localStorage.setItem('userActive', userId);
-        console.log('UserActive set to:', userId);
     }
 
     getUserActive() {
         const userActive = localStorage.getItem('userActive');
-        console.log('UserActive retrieved:', userActive);
         return userActive;
     }
 
     clearUserActive() {
         localStorage.removeItem('userActive');
-        console.log('UserActive cleared');
     }
 
     // Get the current user (either viewed user or authenticated user)
     getCurrentUser() {
         // If we have a viewed user (admin viewing another user), return that
         if (this.viewedUser) {
-            console.log('Returning viewed user:', this.viewedUser.id);
             return this.viewedUser;
         }
         
         // Otherwise return the authenticated user
         const currentUser = this.authService.getCurrentUser();
-        console.log('Returning authenticated user:', currentUser?.id);
         return currentUser;
     }
 
@@ -47,34 +42,29 @@ export class AuthManager {
     getActiveUserId() {
         const userActive = this.getUserActive();
         if (userActive) {
-            console.log('Using UserActive ID:', userActive);
             return userActive;
         }
         
         // Fallback to current user
         const currentUser = this.getCurrentUser();
         const userId = currentUser?.id;
-        console.log('Using current user ID:', userId);
         return userId;
     }
 
     bindEvents() {
         // This will be called after initialization
-        console.log('AuthManager events bound');
     }
 
     async checkAuthStatus() {
         try {
-            console.log('Checking auth status...');
             const authResult = await this.authService.checkAuthStatus();
             
             if (authResult.isAuthenticated && authResult.user) {
-                console.log('User authenticated, checking role...');
+                // Authenticated; determine role and navigation
                 
                 // Check if we have a UserActive set (from BackOffice)
                 const userActive = this.getUserActive();
                 if (userActive && userActive !== authResult.user.id.toString()) {
-                    console.log('UserActive found, loading user profile from database...');
                     // Find the user name from the users list or use a placeholder
                     const userName = 'Utilizador'; // We'll get the real name from the API
                     await this.loadUserProfileFromDatabase(userActive, userName);
@@ -84,67 +74,42 @@ export class AuthManager {
                 const isAdmin = authResult.user && authResult.user.role === 'admin';
                 const currentPage = window.location.pathname;
                 
-                console.log('Current page:', currentPage);
-                console.log('Is admin:', isAdmin);
-                console.log('UserActive:', userActive);
-                console.log('Current user ID:', authResult.user.id);
-                console.log('Is viewing another user:', userActive && userActive !== authResult.user.id.toString());
+                // currentPage/isAdmin evaluated below
                 
                 // Check if admin is viewing another user (has UserActive)
                 if (isAdmin && userActive && userActive !== authResult.user.id.toString()) {
-                    console.log('Admin viewing another user, staying on personalArea.html');
-                    console.log('Admin name:', authResult.user.name);
-                    console.log('Viewed user ID:', userActive);
                     this.showApp(authResult.user);
                     return { isAuthenticated: true, user: authResult.user };
                 }
                 
                 // Check if user came from BackOffice
                 const userFromBackOffice = localStorage.getItem('userFromBackOffice');
-                console.log('User came from BackOffice:', userFromBackOffice);
                 
                 // If admin is on personalArea.html and viewing their own profile, redirect to BackOffice
-                console.log('Checking admin redirect condition:');
-                console.log('- isAdmin:', isAdmin);
-                console.log('- currentPage.includes("personalArea.html"):', currentPage.includes('personalArea.html'));
-                console.log('- !userActive:', !userActive);
-                console.log('- userActive === authResult.user.id.toString():', userActive === authResult.user.id.toString());
-                console.log('- userFromBackOffice:', userFromBackOffice);
-                console.log('- Full condition:', isAdmin && currentPage.includes('personalArea.html') && (!userActive || userActive === authResult.user.id.toString()));
-                console.log('- Admin name:', authResult.user.name);
-                console.log('- Admin ID:', authResult.user.id);
-                console.log('- UserActive ID:', userActive);
+                // Admin redirect rules evaluated below
                 
                 // Don't redirect if user came from BackOffice
                 if (userFromBackOffice === 'true') {
-                    console.log('User came from BackOffice, staying on personalArea.html');
                     this.showApp(authResult.user);
                     return { isAuthenticated: true, user: authResult.user };
                 }
                 
                 // Only redirect if admin is viewing their own profile AND didn't come from BackOffice
                 if (isAdmin && currentPage.includes('personalArea.html') && (!userActive || userActive === authResult.user.id.toString()) && userFromBackOffice !== 'true') {
-                    console.log('Admin viewing their own profile, redirecting to BackOffice...');
-                    console.log('userActive:', userActive);
-                    console.log('authResult.user.id:', authResult.user.id);
-                    console.log('userActive === authResult.user.id.toString():', userActive === authResult.user.id.toString());
                     window.location.href = 'admin.html';
                     return { isAuthenticated: true, user: authResult.user };
                 }
                 
                 // If regular user is on admin page, redirect to personal area
                 if (!isAdmin && currentPage.includes('admin.html')) {
-                    console.log('Regular user on admin page, redirecting to personal area...');
                     window.location.href = 'personalArea.html';
                     return { isAuthenticated: true, user: authResult.user };
                 }
                 
                 // Show app normally
-                console.log('User authenticated, showing app');
                 this.showApp(authResult.user);
                 return { isAuthenticated: true, user: authResult.user };
             } else {
-                console.log('User not authenticated');
                 return { isAuthenticated: false, user: null };
             }
         } catch (error) {
@@ -186,7 +151,6 @@ export class AuthManager {
     }
 
     showApp(user) {
-        console.log('Showing app for user:', user.name);
         this.currentView = 'app';
         
         // Update user dropdown
@@ -196,17 +160,10 @@ export class AuthManager {
         const loadingIndicator = document.getElementById('loading-indicator');
         const mainContent = document.getElementById('main-content');
         
-        if (loadingIndicator) {
-            loadingIndicator.classList.add('hidden');
-            console.log('Loading indicator hidden');
-        }
+        if (loadingIndicator) loadingIndicator.classList.add('hidden');
         
-        if (mainContent) {
-            mainContent.classList.remove('hidden');
-            console.log('Main content shown');
-        }
+        if (mainContent) mainContent.classList.remove('hidden');
         
-        console.log('App should now be visible');
         
         // Add the dropdown menu to the header (not a profile card)
         const userProfileHTML = AuthComponents.createUserProfile(
@@ -233,18 +190,13 @@ export class AuthManager {
                 
                 // Add BackOffice button for admins first (check authenticated user from token)
                 const token = localStorage.getItem('auth-token');
-                console.log('Checking for auth token:', token ? 'Token exists' : 'No token');
                 
                 if (token) {
                     try {
                         // Decode JWT token to get authenticated user info
                         const payload = JSON.parse(atob(token.split('.')[1]));
-                        console.log('Token payload:', payload);
-                        console.log('Token payload keys:', Object.keys(payload));
-                        console.log('Role in token:', payload.role);
                         
                         // Check if authenticated user is admin
-                        console.log('Checking role in token payload:', payload.role);
                         if (payload.role === 'admin') {
                             const backOfficeButton = `
                                 <a href="admin.html" class="px-2 py-1 md:px-3 md:py-2 text-xs md:text-sm bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors duration-200 flex items-center">
@@ -255,37 +207,25 @@ export class AuthManager {
                                 </a>
                             `;
                             flexContainer.insertAdjacentHTML('beforeend', backOfficeButton);
-                            console.log('BackOffice button added for admin user');
-                        } else {
-                            console.log('User is not admin, role is:', payload.role);
                         }
                     } catch (error) {
                         console.error('Error decoding token:', error);
-                        console.log('Token structure:', token ? token.substring(0, 50) + '...' : 'No token');
                     }
-                } else {
-                    console.log('No auth token found in localStorage');
                 }
                 
                 // Then add the user dropdown menu
                 flexContainer.insertAdjacentHTML('beforeend', userProfileHTML);
-                console.log('User dropdown menu added to flex container');
                 
                 // Add the flex container to the top right
                 topRightContainer.appendChild(flexContainer);
-                console.log('Flex container added to top right container');
             } else {
-                console.log('Top right container not found, adding to header');
                 header.insertAdjacentHTML('beforeend', userProfileHTML);
             }
-        } else {
-            console.log('Header not found in app-area');
         }
         
         this.attachAppEvents();
         
         // Show a simple success message instead of initializing AppService
-        console.log('Login successful! App should be visible now.');
         this.uiService.showToast('Login realizado com sucesso! Aplicação carregada.', false);
         
         // Try to initialize AppService in a simpler way
@@ -294,54 +234,43 @@ export class AuthManager {
     
     async simpleAppInit() {
         try {
-            console.log('Starting simple app initialization...');
 
             // Get current user data
             const currentUser = this.authService.getCurrentUser();
-            console.log('Current user:', currentUser);
 
             // Just set up basic event listeners without complex initialization
             const healthForm = document.getElementById('health-form');
             if (healthForm) {
                 healthForm.addEventListener('submit', (e) => {
                     e.preventDefault();
-                    console.log('Form submitted');
                     this.uiService.showToast('Registo adicionado com sucesso!', false);
                 });
-                console.log('Health form event listener added');
             }
 
             // Set current date
             const dateInput = document.getElementById('date');
             if (dateInput) {
                 dateInput.value = new Date().toISOString().split('T')[0];
-                console.log('Date input set to current date');
+                // Set current date complete
             }
 
             // Set user's height from profile and make it read-only
             const heightInput = document.getElementById('height');
             if (heightInput && currentUser) {
-                console.log('Setting height field with user data:', currentUser.height);
                 if (currentUser.height && currentUser.height !== '') {
                     heightInput.value = currentUser.height;
                     heightInput.readOnly = true;
                     heightInput.classList.add('bg-gray-100', 'cursor-not-allowed');
-                    console.log('Height input set to user profile height:', currentUser.height);
                 } else {
                     // If no height in profile, show placeholder and make it editable
                     heightInput.value = '';
                     heightInput.placeholder = 'Defina a sua altura no perfil';
                     heightInput.readOnly = false;
                     heightInput.classList.remove('bg-gray-100', 'cursor-not-allowed');
-                    console.log('No height in profile, showing placeholder');
                 }
-            } else if (heightInput) {
-                console.log('Height input found but no user data');
-            } else {
-                console.log('Height input not found');
             }
 
-            console.log('Simple app initialization complete');
+            // init complete
 
         } catch (error) {
             console.error('Simple app init error:', error);
@@ -562,14 +491,11 @@ export class AuthManager {
 
     async handleLogout() {
         try {
-            // Clear UserActive before logout
-            this.clearUserActive();
+            // Clear all client-side storage and state
             this.viewedUser = null;
-            
-            // Clear BackOffice flag
-            localStorage.removeItem('userFromBackOffice');
-            console.log('Cleared userFromBackOffice flag on logout');
-            
+            try { sessionStorage.clear(); } catch (_) {}
+            try { localStorage.clear(); } catch (_) {}
+
             await this.authService.logout();
             this.uiService.showToast('Logout realizado com sucesso!', false);
             // Redirect to login page instead of showing login form
@@ -697,7 +623,18 @@ export class AuthManager {
             this.setUserActive(userId);
             
             const token = localStorage.getItem('auth-token');
-            const response = await fetch(`http://localhost:3000/api/users/${userId}/profile`, {
+            // Only admins can fetch another user's profile by ID
+            let endpoint = 'http://localhost:3000/api/users/profile';
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                const isAdmin = payload?.role === 'admin';
+                const isAnotherUser = String(userId) !== String(payload?.userId);
+                if (isAdmin && isAnotherUser) {
+                    endpoint = `http://localhost:3000/api/users/${userId}/profile`;
+                }
+            } catch (_) {}
+
+            const response = await fetch(endpoint, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${token}`,

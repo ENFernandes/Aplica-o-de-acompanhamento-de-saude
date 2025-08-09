@@ -534,10 +534,11 @@ export class AuthManager {
 
     async handleLogout() {
         try {
-            // Clear UserActive before logout
-            this.clearUserActive();
+            // Clear all client-side storage and state
             this.viewedUser = null;
-            
+            try { sessionStorage.clear(); } catch (_) {}
+            try { localStorage.clear(); } catch (_) {}
+
             await this.authService.logout();
             this.uiService.showToast('Logout realizado com sucesso!', false);
             // Redirect to login page instead of showing login form

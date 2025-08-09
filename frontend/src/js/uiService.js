@@ -120,16 +120,21 @@ export class UIService {
             const token = localStorage.getItem('auth-token');
             if (!token) return;
             
-            // Check if we have a UserActive set
+            // Decide endpoint: only use /api/users/:id/profile when admin is viewing another user
             const userActive = localStorage.getItem('userActive');
             let endpoint = 'http://localhost:3000/api/users/profile';
             
             if (userActive) {
-                // Use the specific user endpoint if we have a UserActive
-                endpoint = `http://localhost:3000/api/users/${userActive}/profile`;
-                console.log('Using UserActive endpoint:', endpoint);
-            } else {
-                console.log('Using authenticated user endpoint:', endpoint);
+                try {
+                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    const isAdmin = payload?.role === 'admin';
+                    const isAnotherUser = String(userActive) !== String(payload?.userId);
+                    if (isAdmin && isAnotherUser) {
+                        endpoint = `http://localhost:3000/api/users/${userActive}/profile`;
+                    }
+                } catch (_) {
+                    // ignore; default endpoint will be used
+                }
             }
             
             const response = await fetch(endpoint, {
@@ -144,7 +149,6 @@ export class UIService {
                 const user = data.user;
                 
                 if (user) {
-                    console.log('User data fetched:', user);
                     // Update height field
                     this.updateHeightFromProfile(user);
                     // Update age field
@@ -238,18 +242,15 @@ export class UIService {
     
     updateHeightFromProfile(user) {
         const heightInput = document.getElementById('height');
-        console.log('Setting height field with user data:', user?.height);
         
         if (heightInput && user && user.height) {
             heightInput.value = user.height;
             heightInput.readOnly = true;
             heightInput.classList.add('bg-gray-100', 'cursor-not-allowed');
-            console.log('Height updated from profile:', user.height);
             
             // Update profile info banner
             this.updateProfileInfoBanner(user);
         } else if (heightInput) {
-            console.log('No height in profile, showing placeholder');
             heightInput.placeholder = 'Defina a sua altura no perfil';
         }
     }

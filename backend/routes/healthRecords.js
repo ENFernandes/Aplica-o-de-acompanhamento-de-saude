@@ -92,8 +92,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
 
 // Middleware to convert camelCase to snake_case
 const convertCamelToSnake = (req, res, next) => {
-    console.log('🔧 Converting camelCase to snake_case...');
-    console.log('Original body:', req.body);
+    // Converting camelCase to snake_case
     
     const convertedBody = {};
     
@@ -116,7 +115,7 @@ const convertCamelToSnake = (req, res, next) => {
         convertedBody[snakeKey] = req.body[key];
     });
     
-    console.log('Converted body:', convertedBody);
+    // Converted body
     req.body = convertedBody;
     next();
 };

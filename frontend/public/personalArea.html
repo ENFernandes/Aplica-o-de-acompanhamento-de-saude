@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Health Tracker - Acompanhamento de Saúde v4</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="src/css/styles.css">
+</head>
+<body class="text-gray-800">
+
+    <div id="loading-indicator" class="flex justify-center items-center h-screen">
+        <div class="text-center">
+            <svg class="animate-spin h-10 w-10 text-blue-500 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+            <p class="mt-2 text-lg">A verificar autenticação...</p>
+            <p class="mt-1 text-sm text-gray-500">Aguarde um momento...</p>
+        </div>
+    </div>
+
+    <div id="main-content" class="container mx-auto p-4 md:p-6 hidden">
+        <!-- Main App Area -->
+        <div id="app-area">
+        <header class="relative mb-8">
+            <!-- User profile dropdown positioned in top right corner -->
+            <div class="absolute top-0 right-0 z-10">
+                <!-- User profile dropdown will be inserted here by AuthManager -->
+            </div>
+            
+            <!-- Centered title and subtitle -->
+            <div class="text-center">
+                <h1 class="text-3xl md:text-4xl font-bold text-blue-600">MiniBox</h1>
+                <p class="text-md md:text-lg text-gray-600 mt-2">O seu diário de saúde, agora otimizado</p>
+                <p id="user-id-display" class="text-xs md:text-sm text-gray-500 mt-2 break-all px-2"></p>
+            </div>
+        </header>
+
+        <section class="mb-12 bg-white p-4 md:p-8 rounded-xl shadow-lg">
+            <h2 class="text-xl md:text-2xl font-bold mb-6">Adicionar Novo Registro</h2>
+            
+            <!-- Profile Info Banner -->
+            <div id="profile-info-banner" class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg hidden">
+                <div class="flex items-center">
+                    <svg class="w-5 h-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span class="text-sm text-blue-800">
+                        <span id="profile-height-info" class="hidden">Altura: <strong id="profile-height-value"></strong> cm</span>
+                        <span id="profile-age-info" class="hidden ml-4">Idade: <strong id="profile-age-value"></strong> anos</span>
+                    </span>
+                </div>
+            </div>
+            
+            <!-- Formulário otimizado para telemóvel -->
+            <form id="health-form" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- Basic Information -->
+                <div class="col-span-1 sm:col-span-2 lg:col-span-1">
+                    <label class="block text-sm font-medium text-gray-700">Data</label>
+                    <input type="date" id="date" name="date" required 
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                </div>
+                
+                <div class="col-span-1">
+                    <label class="block text-sm font-medium text-gray-700">Peso (kg)</label>
+                    <input type="number" step="0.1" name="weight" required 
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                </div>
+
+                <div class="col-span-1">
+                    <label class="block text-sm font-medium text-gray-700">
+                        Altura (cm)
+                        <span class="text-xs text-gray-500 ml-1">(do perfil)</span>
+                        <span id="height-status" class="text-xs text-blue-600 ml-2 hidden">🔄 Carregando...</span>
+                    </label>
+                    <input type="number" name="height" id="height" required 
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                        placeholder="Defina a sua altura no perfil">
+                    <p class="text-xs text-gray-500 mt-1">Preenchido automaticamente do seu perfil</p>
+                </div>
+                
+                <div class="col-span-1">
+                    <label class="block text-sm font-medium text-gray-700">
+                        Idade
+                        <span class="text-xs text-gray-500 ml-1">(calculada)</span>
+                    </label>
+                    <input type="number" name="age" id="age" required 
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    <p class="text-xs text-gray-500 mt-1">Calculada da data de nascimento</p>
+                </div>
+                <!-- Body Composition -->
+                <div class="col-span-1">
+                    <label class="block text-sm font-medium text-gray-700">Massa Gorda (%)</label>
+                    <input type="number" step="0.1" name="bodyFatPercentage" 
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                </div>
+                
+                <div class="col-span-1">
+                    <label class="block text-sm font-medium text-gray-700">Massa Muscular (kg)</label>
+                    <input type="number" step="0.1" name="muscleMass" 
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                </div>
+                
+                <div class="col-span-1">
+                    <label class="block text-sm font-medium text-gray-700">Massa Óssea (kg)</label>
+                    <input type="number" step="0.1" name="boneMass" 
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                </div>
+                
+                <!-- Health Metrics -->
+                <div class="col-span-1">
+                    <label class="block text-sm font-medium text-gray-700">Índ. Massa Corp.</label>
+                    <input type="number" step="0.1" name="bmi" 
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                </div>
+                
+                <div class="col-span-1">
+                    <label class="block text-sm font-medium text-gray-700">Disp. Calórico (Kcal)</label>
+                    <input type="number" name="kcal" 
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                </div>
+                
+                <div class="col-span-1">
+                    <label class="block text-sm font-medium text-gray-700">Idade Metabólica</label>
+                    <input type="number" name="metabolicAge" 
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                </div>
+                
+                <div class="col-span-1">
+                    <label class="block text-sm font-medium text-gray-700">Água (%)</label>
+                    <input type="number" step="0.1" name="waterPercentage" 
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                </div>
+                
+                <div class="col-span-1">
+                    <label class="block text-sm font-medium text-gray-700">Gordura Visceral</label>
+                    <input type="number" name="visceralFat" 
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                </div>
+                
+                <!-- Submit Button -->
+                <div class="col-span-1 sm:col-span-2 lg:col-span-4 mt-6">
+                    <button type="submit" 
+                        class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-300 shadow-md flex items-center justify-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                        Salvar Registro
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <section id="suggestions-section" class="mb-12"><h2 class="text-xl md:text-2xl font-bold mb-4">Sugestões para Melhorar</h2><div id="suggestions-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div></section>
+        <section id="charts-section" class="mb-12"><h2 class="text-xl md:text-2xl font-bold mb-6 text-center">Seu Progresso Visual</h2><div class="grid grid-cols-1 lg:grid-cols-2 gap-8"><div class="bg-white p-4 md:p-6 rounded-xl shadow-lg"><div class="chart-container"><canvas id="weightBmiChart"></canvas></div></div><div class="bg-white p-4 md:p-6 rounded-xl shadow-lg"><div class="chart-container"><canvas id="compositionChart"></canvas></div></div><div class="bg-white p-4 md:p-6 rounded-xl shadow-lg lg:col-span-2"><div class="chart-container max-w-xl mx-auto"><canvas id="fatDistributionChart"></canvas></div></div></div></section>
+        <section id="history-section">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl md:text-2xl font-bold">Histórico de Registros</h2>
+                <div class="flex gap-2">
+                    <button onclick="testCharts()" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm">
+                    📊 Testar Gráficos
+                </button>
+                <button onclick="reloadHealthData()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm">
+                    🔄 Recarregar Dados
+                </button>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left text-gray-500">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-50 hidden md:table-header-group">
+                        <tr>
+                            <th scope="col" class="py-3 px-4">Data</th>
+                            <th scope="col" class="py-3 px-4">Peso</th>
+                            <th scope="col" class="py-3 px-4">% Gordura</th>
+                            <th scope="col" class="py-3 px-4">Massa Muscular</th>
+                            <th scope="col" class="py-3 px-4">IMC</th>
+                            <th scope="col" class="py-3 px-4">Gordura Visceral</th>
+                            <th scope="col" class="py-3 px-4">% Água</th>
+                            <th scope="col" class="py-3 px-4">Idade Metabólica</th>
+                            <th scope="col" class="py-3 px-4 text-center">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-table-body">
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmação -->
+    <div id="confirm-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 h-full w-full hidden z-50 flex items-center justify-center p-4">
+        <div class="p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
+            <div class="text-center">
+                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100"><svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg></div>
+                <h3 class="text-lg leading-6 font-medium text-gray-900">Eliminar Registo?</h3>
+                <div class="mt-2 px-7 py-3"><p class="text-sm text-gray-500">Tem a certeza? Esta ação não pode ser desfeita.</p></div>
+                <div class="items-center px-4 py-3">
+                    <button id="modal-confirm-btn" class="px-4 py-2 bg-red-500 text-white text-base font-medium rounded-md w-auto shadow-sm hover:bg-red-700">Eliminar</button>
+                    <button id="modal-cancel-btn" class="px-4 py-2 bg-gray-200 text-gray-800 text-base font-medium rounded-md w-auto shadow-sm hover:bg-gray-300 ml-2">Cancelar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notificação Toast -->
+    <div id="toast-notification" class="fixed bottom-5 right-5 text-white py-2 px-4 rounded-lg shadow-lg hidden">
+        <p id="toast-message"></p>
+    </div>
+
+    <!-- Script principal -->
+    <script type="module" src="src/js/main.js"></script>
+    <script type="module" src="src/js/profilePopulator.js"></script>
+
+</body>
+</html>

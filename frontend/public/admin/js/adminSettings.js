@@ -6,6 +6,7 @@ export class AdminSettingsService {
             systemName: 'Health Tracker',
             supportEmail: 'support@healthtracker.com',
             maxRecords: 1000,
+            whatsappNumber: '351000000000',
             emailNotifications: true,
             systemAlerts: true,
             autoReports: false
@@ -26,6 +27,7 @@ export class AdminSettingsService {
             if (response.ok) {
                 const data = await response.json();
                 this.settings = { ...this.settings, ...data.settings };
+                try { localStorage.setItem('admin-settings', JSON.stringify(this.settings)); } catch (_) {}
                 this.updateSettingsForm();
                 return this.settings;
             } else {
@@ -34,6 +36,7 @@ export class AdminSettingsService {
         } catch (error) {
             console.error('Error loading settings:', error);
             // Use default settings
+            try { localStorage.setItem('admin-settings', JSON.stringify(this.settings)); } catch (_) {}
             this.updateSettingsForm();
         }
     }
@@ -53,6 +56,8 @@ export class AdminSettingsService {
 
             if (response.ok) {
                 this.settings = { ...this.settings, ...settings };
+                // Persist locally to permitir que o site público use o número sem nova chamada
+                try { localStorage.setItem('admin-settings', JSON.stringify(this.settings)); } catch (_) {}
                 alert('Configurações guardadas com sucesso!');
                 return true;
             } else {
@@ -72,6 +77,7 @@ export class AdminSettingsService {
         const systemName = document.getElementById('system-name');
         const supportEmail = document.getElementById('support-email');
         const maxRecords = document.getElementById('max-records');
+        const whatsappNumber = document.getElementById('whatsapp-number');
         const emailNotifications = document.getElementById('email-notifications');
         const systemAlerts = document.getElementById('system-alerts');
         const autoReports = document.getElementById('auto-reports');
@@ -79,6 +85,7 @@ export class AdminSettingsService {
         if (systemName) systemName.value = this.settings.systemName;
         if (supportEmail) supportEmail.value = this.settings.supportEmail;
         if (maxRecords) maxRecords.value = this.settings.maxRecords;
+        if (whatsappNumber) whatsappNumber.value = this.settings.whatsappNumber || '';
         if (emailNotifications) emailNotifications.checked = this.settings.emailNotifications;
         if (systemAlerts) systemAlerts.checked = this.settings.systemAlerts;
         if (autoReports) autoReports.checked = this.settings.autoReports;
@@ -129,6 +136,7 @@ export class AdminSettingsManager {
             'system-name',
             'support-email',
             'max-records',
+            'whatsapp-number',
             'email-notifications',
             'system-alerts',
             'auto-reports'
@@ -169,6 +177,7 @@ export class AdminSettingsManager {
             'system-name': 'systemName',
             'support-email': 'supportEmail',
             'max-records': 'maxRecords',
+            'whatsapp-number': 'whatsappNumber',
             'email-notifications': 'emailNotifications',
             'system-alerts': 'systemAlerts',
             'auto-reports': 'autoReports'
@@ -200,6 +209,7 @@ export class AdminSettingsManager {
             'system-name',
             'support-email',
             'max-records',
+            'whatsapp-number',
             'email-notifications',
             'system-alerts',
             'auto-reports'
@@ -225,6 +235,7 @@ export class AdminSettingsManager {
             'system-name': 'systemName',
             'support-email': 'supportEmail',
             'max-records': 'maxRecords',
+            'whatsapp-number': 'whatsappNumber',
             'email-notifications': 'emailNotifications',
             'system-alerts': 'systemAlerts',
             'auto-reports': 'autoReports'

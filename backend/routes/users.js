@@ -66,6 +66,67 @@ router.get('/:id/profile', authenticateToken, async (req, res) => {
     }
 });
 
+// Update specific user profile by ID (admin only)
+router.put('/:id/profile', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.params.id;
+
+        // Check if current user is admin
+        const currentUserResult = await pool.query(
+            'SELECT get_user_role(id) as role FROM users WHERE id = $1',
+            [req.user.userId]
+        );
+
+        if (currentUserResult.rows.length === 0 || currentUserResult.rows[0].role !== 'admin') {
+            return res.status(403).json({
+                error: 'Admin access required'
+            });
+        }
+
+        // Accept all possible fields from frontend
+        const { name, email, address, taxId, height, birthday, phone } = req.body;
+
+        const updateFields = [];
+        const updateValues = [];
+        let paramCount = 1;
+
+        if (name) { updateFields.push(`name = $${paramCount}`); updateValues.push(name); paramCount++; }
+        if (email) { updateFields.push(`email = $${paramCount}`); updateValues.push(email); paramCount++; }
+        if (address) { updateFields.push(`address = $${paramCount}`); updateValues.push(address); paramCount++; }
+        if (taxId) { updateFields.push(`tax_id = $${paramCount}`); updateValues.push(taxId); paramCount++; }
+        if (height) { updateFields.push(`height = $${paramCount}`); updateValues.push(height); paramCount++; }
+        if (birthday) { updateFields.push(`birthday = $${paramCount}`); updateValues.push(birthday); paramCount++; }
+        if (phone) { updateFields.push(`phone = $${paramCount}`); updateValues.push(phone); paramCount++; }
+
+        if (updateFields.length === 0) {
+            return res.status(400).json({ error: 'No fields to update' });
+        }
+
+        updateValues.push(userId);
+
+        const query = `
+            UPDATE users 
+            SET ${updateFields.join(', ')}, updated_at = NOW()
+            WHERE id = $${paramCount}
+            RETURNING id, email, name, address, tax_id, height, TO_CHAR(birthday, 'YYYY-MM-DD') as birthday, phone, created_at, updated_at
+        `;
+
+        const result = await pool.query(query, updateValues);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        res.json({
+            message: 'Profile updated successfully',
+            user: result.rows[0]
+        });
+    } catch (error) {
+        console.error('Update specific user profile error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 // Get specific user's health records (for admin use)
 router.get('/:id/health-records', authenticateToken, async (req, res) => {
     try {

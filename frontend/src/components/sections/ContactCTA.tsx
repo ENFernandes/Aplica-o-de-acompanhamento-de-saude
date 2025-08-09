@@ -14,14 +14,12 @@ const ContactCTA = () => {
           <div className="mt-6 flex items-center justify-center gap-3">
             {/* WhatsApp placeholder - substitui pelo teu número */}
             <a
+              id="whatsapp-cta"
               href="https://wa.me/351000000000?text=Olá%20MiniBox%20Esposende!%20Quero%20marcar%20uma%20aula."
               target="_blank"
               rel="noreferrer"
             >
               <Button variant="hero" size="lg">Falar no WhatsApp</Button>
-            </a>
-            <a href="mailto:hello@minibox.pt">
-              <Button variant="outline" size="lg">Enviar e‑mail</Button>
             </a>
           </div>
         </div>

@@ -197,8 +197,7 @@ function validateLogin(req, res, next) {
 }
 
 function validateHealthRecord(req, res, next) {
-    console.log('🔍 Validating health record...');
-    console.log('Body to validate:', req.body);
+    // Validating health record
     
     // Create a normalized body for validation
     const normalizedBody = { ...req.body };
@@ -225,19 +224,19 @@ function validateHealthRecord(req, res, next) {
         }
     });
     
-    console.log('Normalized body for validation:', normalizedBody);
+        // Normalized body for validation
     
     const { error } = healthRecordSchema.validate(normalizedBody);
     
     if (error) {
-        console.log('❌ Validation error:', error.details[0].message);
+        // Validation error
         return res.status(400).json({
             error: 'Validation Error',
             message: error.details[0].message
         });
     }
     
-    console.log('✅ Validation passed');
+    // Validation passed
     next();
 }
 

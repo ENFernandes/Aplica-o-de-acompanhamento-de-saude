@@ -29,7 +29,7 @@ async function testDatabaseConnection() {
 async function initializeDatabase() {
     try {
         await testDatabaseConnection();
-        console.log('✅ Database connected successfully');
+        // Database connected successfully
     } catch (error) {
         console.error('❌ Database connection failed:', error);
         process.exit(1);
@@ -38,13 +38,13 @@ async function initializeDatabase() {
 
 // Graceful shutdown
 process.on('SIGINT', async () => {
-    console.log('🔄 Shutting down database connections...');
+    // Shutting down database connections...
     await pool.end();
     process.exit(0);
 });
 
 process.on('SIGTERM', async () => {
-    console.log('🔄 Shutting down database connections...');
+    // Shutting down database connections...
     await pool.end();
     process.exit(0);
 });

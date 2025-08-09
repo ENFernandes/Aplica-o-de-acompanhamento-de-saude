@@ -457,7 +457,7 @@ router.get('/analytics', requireAdmin, async (req, res) => {
                     END
             `);
         } catch (err) {
-            console.log('BMI query failed, using mock data');
+            // BMI query failed, using mock data
             bmiDistributionResult = { rows: [
                 { range: 'Peso normal', count: 10 },
                 { range: 'Excesso de peso', count: 5 }
@@ -476,7 +476,7 @@ router.get('/analytics', requireAdmin, async (req, res) => {
                 ORDER BY hour
             `);
         } catch (err) {
-            console.log('Activity query failed, using mock data');
+            // Activity query failed, using mock data
             activityResult = { rows: [
                 { hour: 8, count: 5 },
                 { hour: 12, count: 8 },
@@ -499,7 +499,7 @@ router.get('/analytics', requireAdmin, async (req, res) => {
                 LIMIT 5
             `);
         } catch (err) {
-            console.log('Top users query failed, using mock data');
+            // Top users query failed, using mock data
             topUsersResult = { rows: [
                 { name: 'Elder Fernandes', records: 15, avg_weight: 75.5 },
                 { name: 'Admin User', records: 8, avg_weight: 70.2 }
@@ -625,7 +625,7 @@ router.put('/settings', requireAdmin, async (req, res) => {
             `, [key, JSON.stringify(value)]);
         }
         
-        console.log('Settings saved to database:', settings);
+        // Settings saved
         res.json({ 
             message: 'Configurações guardadas com sucesso',
             settings: settings
@@ -672,7 +672,7 @@ router.put('/notifications/:id/read', requireAdmin, async (req, res) => {
         const { id } = req.params;
         
         // In a real application, you would update the notification in the database
-        console.log('Marking notification as read:', id);
+        // Mark single notification as read
 
         res.json({ message: 'Notificação marcada como lida' });
     } catch (error) {
@@ -684,7 +684,7 @@ router.put('/notifications/:id/read', requireAdmin, async (req, res) => {
 router.put('/notifications/read-all', requireAdmin, async (req, res) => {
     try {
         // In a real application, you would update all notifications in the database
-        console.log('Marking all notifications as read');
+        // Mark all notifications as read
 
         res.json({ message: 'Todas as notificações marcadas como lidas' });
     } catch (error) {

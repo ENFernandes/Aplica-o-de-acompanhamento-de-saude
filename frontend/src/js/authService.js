@@ -7,7 +7,6 @@ export class AuthService {
         this.isAuthenticated = false;
         this.token = null;
         this.databaseService = new DatabaseService();
-        console.log('AuthService initialized');
     }
 
     // Check if user is logged in
@@ -32,16 +31,18 @@ export class AuthService {
                     this.isAuthenticated = true;
                     this.token = token;
                     
-                    // Check if we have a UserActive set
+                    // Decide endpoint: only admins editing/seeing outro utilizador usam ID
                     const userActive = localStorage.getItem('userActive');
                     let profileEndpoint = '/api/users/profile';
-                    
                     if (userActive) {
-                        // Use the specific user endpoint if we have a UserActive
-                        profileEndpoint = `/api/users/${userActive}/profile`;
-                        console.log('Using UserActive endpoint for profile:', profileEndpoint);
-                    } else {
-                        console.log('Using authenticated user endpoint for profile:', profileEndpoint);
+                        try {
+                            const payload = JSON.parse(atob(token.split('.')[1]));
+                            const isAdmin = payload?.role === 'admin';
+                            const isAnotherUser = String(userActive) !== String(payload?.userId);
+                            if (isAdmin && isAnotherUser) {
+                                profileEndpoint = `/api/users/${userActive}/profile`;
+                            }
+                        } catch (_) {}
                     }
                     
                     // Now fetch complete profile with all fields
@@ -56,20 +57,17 @@ export class AuthService {
                         if (profileResponse.success) {
                             // Update with complete profile data
                             this.currentUser = profileResponse.data.user;
-                            console.log('Complete user profile loaded:', this.currentUser.name);
                         } else {
-                            console.log('Could not fetch complete profile, using basic info');
+                            // Fallback to basic info
                         }
                     } catch (profileError) {
-                        console.log('Profile fetch failed, using basic user info:', profileError);
+                        // Fallback to basic user info
                     }
                     
-                    console.log('User authenticated via database:', this.currentUser.name);
                     return { isAuthenticated: true, user: this.currentUser };
                 } else {
                     // Token invalid, clear it
                     localStorage.removeItem('auth-token');
-                    console.log('Invalid token, cleared from storage');
                     return { isAuthenticated: false, user: null };
                 }
             } catch (error) {
@@ -100,7 +98,6 @@ export class AuthService {
                 // Store token
                 localStorage.setItem('auth-token', response.data.token);
                 this.token = response.data.token;
-                console.log('User registered successfully via database');
                 return { user: response.data.user, success: true };
             } else {
                 throw new Error(response.error || 'Registration failed');
@@ -127,7 +124,6 @@ export class AuthService {
                 this.token = response.data.token;
                 this.currentUser = response.data.user;
                 this.isAuthenticated = true;
-                console.log('User logged in successfully via database');
                 return { user: response.data.user, success: true };
             } else {
                 throw new Error(response.error || 'Login failed');
@@ -160,7 +156,6 @@ export class AuthService {
             
             // Clear token from storage
             localStorage.removeItem('auth-token');
-            console.log('User logged out successfully');
             
             return { success: true };
         } catch (error) {
@@ -259,11 +254,15 @@ export class AuthService {
             let profileEndpoint = '/api/users/profile';
             
             if (userActive) {
-                // Use the specific user endpoint if we have a UserActive
-                profileEndpoint = `/api/users/${userActive}/profile`;
-                console.log('Using UserActive endpoint for profile update:', profileEndpoint);
-            } else {
-                console.log('Using authenticated user endpoint for profile update:', profileEndpoint);
+                // Only allow admin to update another user's profile
+                try {
+                    const payload = JSON.parse(atob(this.token.split('.')[1]));
+                    const isAdmin = payload?.role === 'admin';
+                    const isAnotherUser = String(payload?.userId) !== String(userActive);
+                    if (isAdmin && isAnotherUser) {
+                        profileEndpoint = `/api/users/${userActive}/profile`;
+                    }
+                } catch (_) {}
             }
 
             const response = await this.databaseService.makeRequest(profileEndpoint, {

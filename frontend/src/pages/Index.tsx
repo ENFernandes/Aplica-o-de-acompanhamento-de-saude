@@ -15,6 +15,23 @@ const Index = () => {
       document.head.appendChild(link);
     }
     link.setAttribute("href", href);
+
+    // Atualiza o link do WhatsApp com o número vindo da API
+    (async () => {
+      try {
+        const resp = await fetch('http://localhost:3000/api/public/settings', { credentials: 'omit' });
+        if (!resp.ok) return;
+        const data = await resp.json();
+        const phone = data?.settings?.whatsappNumber;
+        if (phone && /^\d{9,15}$/.test(String(phone))) {
+          const anchor = document.getElementById('whatsapp-cta') as HTMLAnchorElement | null;
+          if (anchor) {
+            const msg = encodeURIComponent('Olá MiniBox Esposende! Quero marcar uma aula.');
+            anchor.href = `https://wa.me/${phone}?text=${msg}`;
+          }
+        }
+      } catch (_) {}
+    })();
   }, []);
 
   // Structured data (JSON-LD)
@@ -38,8 +55,8 @@ const Index = () => {
 
   return (
     <>
-      <header className="w-full">
-        <nav className="container mx-auto flex items-center justify-between py-6">
+      <header className="w-full sticky top-0 z-50 border-b bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60">
+        <nav className="container mx-auto flex items-center justify-between py-4">
           <a href="#home" className="flex items-center gap-3" aria-label="MiniBox Esposende">
             {/* Placeholder logo: trocaremos pelo logo oficial assim que disponibilizar */}
             <img 

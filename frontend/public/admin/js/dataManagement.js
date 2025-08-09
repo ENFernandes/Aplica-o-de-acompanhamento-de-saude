@@ -113,19 +113,7 @@ export class DataManagementService {
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     ${record.bodyFatPercentage}%
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div class="flex space-x-2">
-                        <button class="action-btn action-btn-view" onclick="dataManagement.viewRecord('${record.id}')">
-                            👁️ Ver
-                        </button>
-                        <button class="action-btn action-btn-edit" onclick="dataManagement.editRecord('${record.id}')">
-                            ✏️ Editar
-                        </button>
-                        <button class="action-btn action-btn-delete" onclick="dataManagement.deleteRecord('${record.id}')">
-                            🗑️ Eliminar
-                        </button>
-                    </div>
-                </td>
+                
             </tr>
         `).join('');
     }

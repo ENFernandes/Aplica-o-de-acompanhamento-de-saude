@@ -1,4 +1,4 @@
-// Admin Notifications Service
+// Notifications disabled. Keep minimal stubs to avoid errors if referenced.
 export class AdminNotificationsService {
     constructor() {
         this.baseUrl = 'http://localhost:3000';
@@ -248,7 +248,6 @@ export class AdminNotificationsService {
     }
 }
 
-// Admin Notifications Manager
 export class AdminNotificationsManager {
     constructor() {
         this.notificationsService = new AdminNotificationsService();
@@ -327,15 +326,6 @@ export class AdminNotificationsManager {
 
 // Initialize notifications when DOM is loaded
 document.addEventListener('DOMContentLoaded', async () => {
-    // Wait for admin authentication to complete
-    setTimeout(async () => {
-        if (window.adminAuthManager) {
-            const notificationsManager = new AdminNotificationsManager();
-            await notificationsManager.initialize();
-            
-            // Make notifications manager globally available
-            window.adminNotifications = notificationsManager;
-            console.log('Admin notifications initialized successfully');
-        }
-    }, 1000);
-}); 
+    // Notifications are disabled; expose empty manager to prevent runtime errors
+    window.adminNotifications = new AdminNotificationsManager();
+});
