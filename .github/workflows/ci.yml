@@ -1,8 +1,9 @@
 name: CI
 
 on:
+  workflow_dispatch:
   push:
-    branches: [ master, main ]
+    branches-ignore: [ master, main ]
   pull_request:
     branches: [ master, main ]
 
@@ -62,8 +63,8 @@ jobs:
         uses: peter-evans/create-pull-request@v6
         with:
           branch: auto/pr-${{ github.sha }}
-          title: "Auto PR: CI passed for ${GITHUB_SHA}"
+          title: "Auto PR: CI passed for ${{ github.sha }}"
           body: "CI green. Please review and approve to deploy."
-          base: main
+          base: master
 
 
