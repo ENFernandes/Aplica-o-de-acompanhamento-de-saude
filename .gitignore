@@ -86,6 +86,9 @@ downloads/
 eggs/
 .eggs/
 lib/
+# Allow the frontend source lib directory (utilities for React/Tailwind)
+!frontend/src/lib/
+!frontend/src/lib/**
 lib64/
 parts/
 sdist/
