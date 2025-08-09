@@ -12,10 +12,12 @@ export default defineConfig(({ mode }) => ({
     react(),
   ],
   resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src"),
-      // Explicit alias to satisfy CI/rollup resolving without extension
-      "@/lib/utils": path.resolve(__dirname, "./src/lib/utils.ts"),
-    },
+    alias: [
+      { find: '@', replacement: path.resolve(__dirname, './src') },
+      { find: '@/lib/utils', replacement: path.resolve(__dirname, './src/lib/utils.ts') },
+      // Fallback patterns some plugins may emit
+      { find: /^src\/lib\/utils$/, replacement: path.resolve(__dirname, './src/lib/utils.ts') },
+      { find: /^\/src\/lib\/utils$/, replacement: path.resolve(__dirname, './src/lib/utils.ts') },
+    ],
   },
 }));
