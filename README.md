@@ -25,8 +25,17 @@ start-servers.bat
 
 3) Login/Navigation
 - Landing: `http://localhost:8000/`
-- Login page: `frontend/login.html`
-- BackOffice: `frontend/public/admin.html`
+- Login page: `http://localhost:8000/login`
+- BackOffice: `http://localhost:8000/admin`
+- Personal Area: `http://localhost:8000/personalArea`
+
+## Default Admin User
+
+The application comes with a default admin user:
+- **Email:** `admin@healthtracker.com`
+- **Password:** `admin123`
+
+This user is automatically created when the database is initialized.
 
 ## Key features
 

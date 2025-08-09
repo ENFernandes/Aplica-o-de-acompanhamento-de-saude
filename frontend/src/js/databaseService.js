@@ -1,7 +1,8 @@
 // Database service for PostgreSQL operations
 export class DatabaseService {
     constructor() {
-        this.baseUrl = 'http://localhost:3000'; // Backend API URL
+        // Use same-origin API by default; Caddy proxies /api to backend in Docker/Prod
+        this.baseUrl = '';
         this.isConnected = false;
     }
 

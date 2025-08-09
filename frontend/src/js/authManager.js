@@ -85,13 +85,13 @@ export class AuthManager {
                 const isAdmin = authResult.user && authResult.user.role === 'admin';
                 
                 // Only redirect if not manually navigating and not already on admin page
-                const isOnAdminPage = window.location.pathname.includes('admin.html');
+                const isOnAdminPage = window.location.pathname.includes('admin');
                 const isNavigatingFromAdmin = document.referrer.includes('admin.html');
                 
                 // If admin is on regular page and NOT navigating from admin, redirect to BackOffice
                 if (isAdmin && !isOnAdminPage && !isNavigatingFromAdmin) {
                     console.log('Admin user detected, redirecting to BackOffice...');
-                    window.location.href = 'admin/admin.html';
+                    window.location.href = '/admin';
                     return { isAuthenticated: true, user: authResult.user };
                 }
                 
@@ -227,7 +227,7 @@ export class AuthManager {
                         // Check if authenticated user is admin
                         if (payload.role === 'admin') {
                             const backOfficeButton = `
-                                <a href="admin/admin.html" class="px-2 py-1 md:px-3 md:py-2 text-xs md:text-sm bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors duration-200 flex items-center">
+                                <a href="/admin" class="px-2 py-1 md:px-3 md:py-2 text-xs md:text-sm bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors duration-200 flex items-center">
                                     <span class="hidden sm:inline">🔧</span>
                                     <span class="sm:hidden">🔧</span>
                                     <span class="hidden md:inline ml-1">BackOffice</span>
@@ -409,16 +409,16 @@ export class AuthManager {
                     // On login page, redirect based on user role
                     if (isAdmin) {
                         // Admin users go to BackOffice
-                        window.location.href = 'admin/admin.html';
+                        window.location.href = '/admin';
                     } else {
                         // Regular users go to main app
                         window.location.href = 'personalArea.html';
                     }
                 } else {
                     // In main app, check if admin should be redirected
-                    if (isAdmin && !window.location.pathname.includes('admin.html')) {
+                    if (isAdmin && !window.location.pathname.includes('admin')) {
                         // Admin is in regular app, redirect to BackOffice
-                        window.location.href = 'admin/admin.html';
+                        window.location.href = '/admin';
                     } else {
                         // Show app normally
                         this.uiService.showToast('Login realizado com sucesso!', false);
@@ -1008,7 +1008,7 @@ export class AuthManager {
         if (returnToBackofficeBtn) {
             returnToBackofficeBtn.addEventListener('click', () => {
                 userMenuDropdown.classList.add('hidden');
-                window.location.href = 'admin/admin.html';
+                window.location.href = '/admin';
             });
         }
 
