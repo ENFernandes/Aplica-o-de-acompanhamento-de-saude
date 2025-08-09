@@ -1,21 +1,13 @@
-:{\$PORT}
+:{$PORT}
 encode zstd gzip
 root * /usr/share/caddy
 
-# serve ficheiros estáticos primeiro (ex.: /login.html, /admin.html)
-@static {
-    file { try_files {path} }
-}
-handle @static {
-    file_server
-}
-
 # proxy de API
 handle /api/* {
-    reverse_proxy {\$API_UPSTREAM}
+    reverse_proxy {$API_UPSTREAM}
 }
 
-# fallback SPA para rotas React
+# para o resto: tenta servir o ficheiro; se não existir, faz fallback para index.html (SPA)
 handle {
     try_files {path} /index.html
     file_server
