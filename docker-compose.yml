@@ -50,15 +50,13 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3000
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_NAME: health_tracker
-      DB_USER: health_user
-      DB_PASSWORD: health_password_2024
+      DATABASE_URL: postgresql://health_user:health_password_2024@postgres:5432/health_tracker
+      JWT_SECRET: dev_jwt_secret_2024
       CORS_ORIGIN: http://localhost:8000
     depends_on:
       postgres:
         condition: service_healthy
+    command: ["npm", "run", "start:skip-setup"]
     ports:
       - "3000:3000"
     networks:
