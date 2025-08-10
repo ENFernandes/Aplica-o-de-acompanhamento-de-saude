@@ -1,0 +1,46 @@
+# Docker files - não fazer deploy automático
+docker-compose.yml
+Dockerfile*
+.dockerignore
+
+# Database scripts - não fazer deploy automático
+init-scripts/
+*.sql
+
+# Database configuration - não fazer deploy automático
+backend/config/database.js
+
+# Environment files - não fazer deploy automático
+.env
+.env.*
+env.example
+
+# Node modules - não fazer deploy automático
+node_modules/
+*/node_modules/
+
+# Logs - não fazer deploy automático
+*.log
+logs/
+
+# Temporary files - não fazer deploy automático
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+
+# Git files - não fazer deploy automático
+.git/
+.gitignore
+
+# IDE files - não fazer deploy automático
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Build artifacts - não fazer deploy automático
+dist/
+build/
+*.tgz
+*.tar.gz
