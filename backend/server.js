@@ -1,3 +1,4 @@
+// Railway redeploy trigger - DATABASE_URL updated
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
