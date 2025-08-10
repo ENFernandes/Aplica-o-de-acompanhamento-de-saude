@@ -1,0 +1,45 @@
+services:
+  # PostgreSQL Database
+  - type: pserv
+    name: health-tracker-db
+    env: postgresql
+    plan: free
+    region: frankfurt
+    databaseName: health_tracker
+    user: health_user
+
+  # Backend Web Service
+  - type: web
+    name: health-tracker-backend
+    env: node
+    plan: free
+    region: frankfurt
+    buildCommand: npm ci
+    startCommand: npm start
+    rootDir: backend
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: DATABASE_URL
+        fromDatabase:
+          name: health-tracker-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CORS_ORIGIN
+        value: https://health-tracker-frontend.onrender.com
+
+  # Frontend Static Site
+  - type: web
+    name: health-tracker-frontend
+    env: static
+    plan: free
+    region: frankfurt
+    buildCommand: npm ci && npm run build
+    staticPublishPath: ./dist
+    rootDir: frontend
+    envVars:
+      - key: VITE_API_URL
+        value: https://health-tracker-backend.onrender.com
