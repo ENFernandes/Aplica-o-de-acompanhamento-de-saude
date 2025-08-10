@@ -6,7 +6,7 @@
     {
       "name": "backend",
       "path": "backend",
-      "startCommand": "node server.js",
+      "startCommand": "npm run setup-db && node server.js",
       "installCommand": "npm ci",
       "buildCommand": "echo 'no build'",
       "envs": {
@@ -18,8 +18,6 @@
       "name": "frontend",
       "path": "frontend",
       "installCommand": "npm ci",
-      // "buildCommand": "npm run build",
-      // "startCommand": "npm run preview",
       "envs": {
         "PORT": "8000"
       }
