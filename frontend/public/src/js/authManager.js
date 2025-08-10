@@ -199,7 +199,7 @@ export class AuthManager {
                         // Check if authenticated user is admin
                         if (payload.role === 'admin') {
                             const backOfficeButton = `
-                                <a href="admin.html" class="px-2 py-1 md:px-3 md:py-2 text-xs md:text-sm bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors duration-200 flex items-center">
+                                <a id="backoffice-link" href="admin.html" class="px-2 py-1 md:px-3 md:py-2 text-xs md:text-sm bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors duration-200 flex items-center">
                                     <span class="hidden sm:inline">🔧</span>
                                     <span class="sm:hidden">🔧</span>
                                     <span class="hidden md:inline ml-1">BackOffice</span>
@@ -207,6 +207,13 @@ export class AuthManager {
                                 </a>
                             `;
                             flexContainer.insertAdjacentHTML('beforeend', backOfficeButton);
+                            // Ensure userActive is cleared when navigating to BackOffice
+                            const backofficeLink = flexContainer.querySelector('#backoffice-link');
+                            if (backofficeLink) {
+                                backofficeLink.addEventListener('click', () => {
+                                    try { localStorage.removeItem('userActive'); } catch (_) {}
+                                });
+                            }
                         }
                     } catch (error) {
                         console.error('Error decoding token:', error);
@@ -979,6 +986,8 @@ export class AuthManager {
                 // Clear the BackOffice flag when returning
                 localStorage.removeItem('userFromBackOffice');
                 console.log('Cleared userFromBackOffice flag');
+                // Clear userActive when going back
+                try { localStorage.removeItem('userActive'); } catch (_) {}
                 window.location.href = 'admin.html';
             });
         }
@@ -987,6 +996,8 @@ export class AuthManager {
         if (returnToMyProfileBtn) {
             returnToMyProfileBtn.addEventListener('click', () => {
                 userMenuDropdown.classList.add('hidden');
+                // Clear userActive when returning to my profile
+                try { localStorage.removeItem('userActive'); } catch (_) {}
                 this.clearViewedUser();
             });
         }

@@ -216,7 +216,7 @@ export class AuthManager {
                 const token = localStorage.getItem('auth-token');
                 console.log('Checking for auth token:', token ? 'Token exists' : 'No token');
                 
-                if (token) {
+        if (token) {
                     try {
                         // Decode JWT token to get authenticated user info
                         const payload = JSON.parse(atob(token.split('.')[1]));
@@ -227,7 +227,7 @@ export class AuthManager {
                         // Check if authenticated user is admin
                         if (payload.role === 'admin') {
                             const backOfficeButton = `
-                                <a href="/admin" class="px-2 py-1 md:px-3 md:py-2 text-xs md:text-sm bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors duration-200 flex items-center">
+                                <a id="backoffice-link" href="/admin" class="px-2 py-1 md:px-3 md:py-2 text-xs md:text-sm bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors duration-200 flex items-center">
                                     <span class="hidden sm:inline">🔧</span>
                                     <span class="sm:hidden">🔧</span>
                                     <span class="hidden md:inline ml-1">BackOffice</span>
@@ -236,6 +236,13 @@ export class AuthManager {
                             `;
                             flexContainer.insertAdjacentHTML('beforeend', backOfficeButton);
                             console.log('BackOffice button added for admin user');
+                            // Ensure userActive is cleared when navigating to BackOffice
+                            const backofficeLink = flexContainer.querySelector('#backoffice-link');
+                            if (backofficeLink) {
+                                backofficeLink.addEventListener('click', () => {
+                                    try { localStorage.removeItem('userActive'); } catch (_) {}
+                                });
+                            }
                         } else {
                             console.log('User is not admin, role is:', payload.role);
                         }
@@ -873,13 +880,11 @@ export class AuthManager {
         console.log('Clearing viewed user, returning to admin profile');
         this.viewedUser = null;
         
+        // When leaving another user's page, clear the userActive flag entirely
+        try { localStorage.removeItem('userActive'); } catch (_) {}
+        
         // Get the authenticated admin user
         const adminUser = this.authService.getCurrentUser();
-        
-        // Set admin as the active user
-        if (adminUser) {
-            this.setUserActive(adminUser.id);
-        }
         
         // Update form fields with admin's own data
         this.updateFormWithUserData(adminUser);
@@ -1008,6 +1013,8 @@ export class AuthManager {
         if (returnToBackofficeBtn) {
             returnToBackofficeBtn.addEventListener('click', () => {
                 userMenuDropdown.classList.add('hidden');
+                // Clear userActive when going back to BackOffice
+                try { localStorage.removeItem('userActive'); } catch (_) {}
                 window.location.href = '/admin';
             });
         }
