@@ -199,22 +199,28 @@ router.put('/:id', authenticateToken, validateHealthRecord, convertCamelToSnake,
             visceral_fat, fat_right_arm, fat_left_arm, fat_right_leg, fat_left_leg, fat_trunk, notes
         } = req.body;
 
-        // Check if record exists and belongs to user
+        // Check if record exists and get owner
         const existingRecord = await pool.query(
-            'SELECT id FROM health_records WHERE id = $1 AND user_id = $2',
-            [id, req.user.userId]
+            'SELECT id, user_id FROM health_records WHERE id = $1',
+            [id]
         );
 
         if (existingRecord.rows.length === 0) {
-            return res.status(404).json({
-                error: 'Health record not found'
-            });
+            return res.status(404).json({ error: 'Health record not found' });
+        }
+
+        const recordOwnerId = existingRecord.rows[0].user_id;
+        const isOwner = recordOwnerId === req.user.userId;
+        const isAdmin = req.user.role === 'admin';
+
+        if (!isOwner && !isAdmin) {
+            return res.status(403).json({ error: 'Not allowed to edit this record' });
         }
 
         // Check if date conflicts with another record (excluding current record)
         const dateConflict = await pool.query(
             'SELECT id FROM health_records WHERE user_id = $1 AND date = $2 AND id != $3',
-            [req.user.userId, date, id]
+            [recordOwnerId, date, id]
         );
 
         if (dateConflict.rows.length > 0) {
@@ -229,13 +235,13 @@ router.put('/:id', authenticateToken, validateHealthRecord, convertCamelToSnake,
                 muscle_mass = $6, bone_mass = $7, bmi = $8, kcal = $9,
                 metabolic_age = $10, water_percentage = $11, visceral_fat = $12,
                 fat_right_arm = $13, fat_left_arm = $14, fat_right_leg = $15, fat_left_leg = $16, fat_trunk = $17
-            WHERE id = $18 AND user_id = $19
+            WHERE id = $18
             RETURNING *`,
             [
                 date, weight, height, age, body_fat_percentage,
                 muscle_mass, bone_mass, bmi, kcal, metabolic_age, water_percentage,
                 visceral_fat, fat_right_arm, fat_left_arm, fat_right_leg, fat_left_leg, fat_trunk,
-                id, req.user.userId
+                id
             ]
         );
 
@@ -276,16 +282,30 @@ router.delete('/:id', authenticateToken, async (req, res) => {
     try {
         const { id } = req.params;
 
-        const result = await pool.query(
-            'DELETE FROM health_records WHERE id = $1 AND user_id = $2 RETURNING id',
-            [id, req.user.userId]
+        // First, check if the record exists and get its owner
+        const existing = await pool.query(
+            'SELECT user_id FROM health_records WHERE id = $1',
+            [id]
         );
 
-        if (result.rows.length === 0) {
+        if (existing.rows.length === 0) {
             return res.status(404).json({
                 error: 'Health record not found'
             });
         }
+
+        const recordOwnerId = existing.rows[0].user_id;
+        const isOwner = recordOwnerId === req.user.userId;
+        const isAdmin = req.user.role === 'admin';
+
+        if (!isOwner && !isAdmin) {
+            return res.status(403).json({
+                error: 'Not allowed to delete this record'
+            });
+        }
+
+        // Admin can delete any record; owner can delete own record
+        await pool.query('DELETE FROM health_records WHERE id = $1', [id]);
 
         res.json({
             message: 'Health record deleted successfully'
