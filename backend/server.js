@@ -15,6 +15,9 @@ const { testDatabaseConnection } = require('./config/database');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Enable trust proxy for Railway deployment
+app.enable('trust proxy');
+
 // Security middleware
 app.use(helmet());
 
