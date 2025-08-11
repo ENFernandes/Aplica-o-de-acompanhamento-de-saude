@@ -227,7 +227,7 @@ export class AuthManager {
                         // Check if authenticated user is admin
                         if (payload.role === 'admin') {
                             const backOfficeButton = `
-                                <a id="backoffice-link" href="/admin" class="px-2 py-1 md:px-3 md:py-2 text-xs md:text-sm bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors duration-200 flex items-center">
+                                <a id="backoffice-link" href="${window.location.origin}/admin.html" class="px-2 py-1 md:px-3 md:py-2 text-xs md:text-sm bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors duration-200 flex items-center">
                                     <span class="hidden sm:inline">🔧</span>
                                     <span class="sm:hidden">🔧</span>
                                     <span class="hidden md:inline ml-1">BackOffice</span>
@@ -425,7 +425,7 @@ export class AuthManager {
                     // In main app, check if admin should be redirected
                     if (isAdmin && !window.location.pathname.includes('admin')) {
                         // Admin is in regular app, redirect to BackOffice
-                        window.location.href = '/admin';
+                        window.location.href = `${window.location.origin}/admin.html`;
                     } else {
                         // Show app normally
                         this.uiService.showToast('Login realizado com sucesso!', false);
@@ -1015,7 +1015,7 @@ export class AuthManager {
                 userMenuDropdown.classList.add('hidden');
                 // Clear userActive when going back to BackOffice
                 try { localStorage.removeItem('userActive'); } catch (_) {}
-                window.location.href = '/admin';
+                window.location.href = `${window.location.origin}/admin.html`;
             });
         }
 

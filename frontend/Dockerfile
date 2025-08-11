@@ -42,6 +42,21 @@ COPY nginx.conf /etc/nginx/nginx.conf
 # Copiar ficheiros buildados
 COPY --from=builder /app/dist /usr/share/nginx/html
 
+# Copy static assets needed by index.html (favicons, images)
+COPY public/assets /usr/share/nginx/html/assets
+
+# Legacy login page support (static HTML + vanilla JS/CSS)
+COPY login.html /usr/share/nginx/html/login.html
+COPY src/js /usr/share/nginx/html/src/js
+COPY src/css /usr/share/nginx/html/src/css
+COPY src/components /usr/share/nginx/html/src/components
+COPY src/data /usr/share/nginx/html/src/data
+# Legacy personal area support
+COPY public/personalArea.html /usr/share/nginx/html/personalArea.html
+# Legacy admin (BackOffice) support
+COPY public/admin.html /usr/share/nginx/html/admin.html
+COPY public/admin /usr/share/nginx/html/admin
+
 # Expor porta
 EXPOSE 80
 
