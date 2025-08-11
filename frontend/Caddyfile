@@ -2,81 +2,9 @@
 encode zstd gzip
 root * /usr/share/caddy
 
-# Configurar MIME types corretos
-@js {
-    path *.js
-}
-@css {
-    path *.css
-}
-@html {
-    path *.html
-}
-
-# Servir ficheiros JavaScript com MIME type correto
-handle @js {
-    header Content-Type application/javascript
-    file_server
-}
-
-# Servir ficheiros CSS com MIME type correto
-handle @css {
-    header Content-Type text/css
-    file_server
-}
-
-# Servir ficheiros HTML com MIME type correto
-handle @html {
-    header Content-Type text/html
-    file_server
-}
-
 # proxy de API
 handle /api/* {
     reverse_proxy {$API_UPSTREAM}
-}
-
-# rota explícita para a página de login estática
-@login {
-    path /login
-    method GET
-}
-handle @login {
-    rewrite * /login.html
-    file_server
-}
-# capturar variantes /login/* e normalizar
-handle_path /login/* {
-    rewrite * /login.html
-    file_server
-}
-
-# rota para personal area estática
-@personal {
-    path /personalArea /personalArea.html
-    method GET
-}
-handle @personal {
-    rewrite * /personalArea.html
-    file_server
-}
-handle_path /personalArea/* {
-    rewrite * /personalArea.html
-    file_server
-}
-
-# rota para admin estático
-@adminpage {
-    path /admin /admin.html
-    method GET
-}
-handle @adminpage {
-    rewrite * /admin.html
-    file_server
-}
-handle_path /admin/* {
-    rewrite * /admin.html
-    file_server
 }
 
 # para o resto: tenta servir o ficheiro; se não existir, faz fallback para index.html (SPA)

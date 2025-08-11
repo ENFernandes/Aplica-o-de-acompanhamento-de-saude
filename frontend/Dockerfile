@@ -13,14 +13,26 @@ COPY package*.json ./
 # Instalar dependências
 RUN npm ci
 
-# Copiar código fonte
-COPY . .
+# Copiar ficheiros de configuração essenciais para o Vite
+COPY vite.config.ts ./
+COPY tsconfig*.json ./
+COPY tailwind.config.ts ./
+COPY postcss.config.js ./
+COPY components.json ./
+
+# Copiar código fonte e HTML
+COPY index.html ./
+COPY src/ ./src/
+COPY public/ ./public/
 
 # Build da aplicação
 RUN npm run build
 
 # Stage de produção com Nginx
 FROM nginx:alpine AS production
+
+# Instalar curl para health check
+RUN apk add --no-cache curl
 
 # Copiar configuração customizada do Nginx
 COPY nginx.conf /etc/nginx/nginx.conf
@@ -33,7 +45,7 @@ EXPOSE 80
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost/ || exit 1
+  CMD curl -f http://localhost/health || exit 1
 
 # Comando de inicialização
 CMD ["nginx", "-g", "daemon off;"]
