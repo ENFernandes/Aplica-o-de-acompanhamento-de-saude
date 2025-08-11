@@ -91,7 +91,7 @@ export class AuthManager {
                 // If admin is on regular page and NOT navigating from admin, redirect to BackOffice
                 if (isAdmin && !isOnAdminPage && !isNavigatingFromAdmin) {
                     console.log('Admin user detected, redirecting to BackOffice...');
-                    window.location.href = '/admin';
+                    window.location.href = `${window.location.origin}/admin.html`;
                     return { isAuthenticated: true, user: authResult.user };
                 }
                 
@@ -416,7 +416,7 @@ export class AuthManager {
                     // On login page, redirect based on user role
                     if (isAdmin) {
                         // Admin users go to BackOffice
-                        window.location.href = '/admin';
+                        window.location.href = `${window.location.origin}/admin.html`;
                     } else {
                         // Regular users go to main app
                         window.location.href = 'personalArea.html';
