@@ -129,10 +129,22 @@ router.post('/', authenticateToken, validateHealthRecord, convertCamelToSnake, a
             visceral_fat, fat_right_arm, fat_left_arm, fat_right_leg, fat_left_leg, fat_trunk, notes
         } = req.body;
 
+        // Determine target user: default to requester; allow admin to specify a different user
+        let targetUserId = req.user.userId;
+        const bodyUserId = req.body.user_id || req.body.userId;
+        if (bodyUserId && req.user.role === 'admin') {
+            // Verify the target user exists
+            const userCheck = await pool.query('SELECT id FROM users WHERE id = $1', [bodyUserId]);
+            if (userCheck.rows.length === 0) {
+                return res.status(400).json({ error: 'Target user does not exist' });
+            }
+            targetUserId = bodyUserId;
+        }
+
         // Check if record for this date already exists
         const existingRecord = await pool.query(
             'SELECT id FROM health_records WHERE user_id = $1 AND date = $2',
-            [req.user.userId, date]
+            [targetUserId, date]
         );
 
         if (existingRecord.rows.length > 0) {
@@ -150,7 +162,7 @@ router.post('/', authenticateToken, validateHealthRecord, convertCamelToSnake, a
             ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
             RETURNING *`,
             [
-                req.user.userId, date, weight, height, age, body_fat_percentage,
+                targetUserId, date, weight, height, age, body_fat_percentage,
                 muscle_mass, bone_mass, bmi, kcal, metabolic_age,
                 water_percentage, visceral_fat, fat_right_arm, fat_left_arm,
                 fat_right_leg, fat_left_leg, fat_trunk

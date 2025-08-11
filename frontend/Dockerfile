@@ -23,7 +23,9 @@ COPY components.json ./
 # Copiar código fonte e HTML
 COPY index.html ./
 COPY src/ ./src/
-COPY public/ ./public/
+# Do not copy the repository's ./public directory because it contains a secondary app
+# which should not be exposed as static files in production. Vite will still bundle
+# required assets referenced by the app.
 
 # Build da aplicação
 RUN npm run build
