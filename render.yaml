@@ -1,12 +1,12 @@
-services:
+databases:
   # PostgreSQL Database
-  - type: db
-    name: health-tracker-db
+  - name: health-tracker-db
     plan: free
     region: frankfurt
     databaseName: health_tracker
     user: health_user
 
+services:
   # Backend Web Service
   - type: web
     name: health-tracker-backend
@@ -22,7 +22,7 @@ services:
         value: 3000
       - key: DATABASE_URL
         from:
-          type: db
+          type: postgres
           name: health-tracker-db
           property: connectionString
       - key: JWT_SECRET
