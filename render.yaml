@@ -21,8 +21,7 @@ services:
       - key: PORT
         value: 3000
       - key: DATABASE_URL
-        from:
-          type: postgres
+        fromDatabase:
           name: health-tracker-db
           property: connectionString
       - key: JWT_SECRET
@@ -33,6 +32,7 @@ services:
   # Frontend Static Site
   - type: static
     name: health-tracker-frontend
+    plan: free
     region: frankfurt
     buildCommand: npm install && npm run build
     staticPublishPath: ./dist
