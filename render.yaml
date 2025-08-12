@@ -33,7 +33,6 @@ services:
   # Frontend Static Site
   - type: static
     name: health-tracker-frontend
-    plan: free
     region: frankfurt
     buildCommand: npm install && npm run build
     staticPublishPath: ./dist
