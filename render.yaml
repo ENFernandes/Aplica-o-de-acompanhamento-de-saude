@@ -28,10 +28,7 @@ services:
       - key: JWT_SECRET
         generateValue: true
       - key: CORS_ORIGIN
-        from:
-          type: static
-          name: health-tracker-frontend
-          property: url
+        value: https://miniboxgym.pt,https://www.miniboxgym.pt
 
   # Frontend Static Site
   - type: static
@@ -47,7 +44,4 @@ services:
         destination: /index.html
     envVars:
       - key: VITE_API_URL
-        from:
-          type: web
-          name: health-tracker-backend
-          property: url
+        value: https://api.miniboxgym.pt
