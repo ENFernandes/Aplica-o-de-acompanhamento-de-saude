@@ -30,8 +30,9 @@ services:
         value: https://miniboxgym.pt,https://www.miniboxgym.pt
 
   # Frontend Static Site
-  - type: static
+  - type: web
     name: health-tracker-frontend
+    env: static
     plan: free
     region: frankfurt
     buildCommand: npm install && npm run build
