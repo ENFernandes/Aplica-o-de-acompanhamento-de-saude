@@ -59,26 +59,13 @@ async function setupDatabase() {
       if (fs.existsSync(scriptPath)) {
         console.log(`📝 Executing ${scriptFile}...`);
         const script = fs.readFileSync(scriptPath, 'utf8');
-        
-        // Split script into individual statements
-        const statements = script
-          .split(';')
-          .map(stmt => stmt.trim())
-          .filter(stmt => stmt.length > 0 && !stmt.startsWith('--'));
-        
-        for (const statement of statements) {
-          if (statement.trim()) {
-            try {
-              await client.query(statement);
-              console.log(`✅ Statement executed successfully`);
-            } catch (error) {
-              // Log error but continue (some statements might fail if tables already exist)
-              console.log(`⚠️  Statement warning: ${error.message}`);
-            }
-          }
+        try {
+          // Execute the entire script to preserve PL/pgSQL blocks and dollar-quoting
+          await client.query(script);
+          console.log(`✅ ${scriptFile} completed`);
+        } catch (error) {
+          console.log(`⚠️  Script warning in ${scriptFile}: ${error.message}`);
         }
-        
-        console.log(`✅ ${scriptFile} completed`);
       } else {
         console.log(`⚠️  Script not found: ${scriptFile} (looked in ${scriptsDir})`);
       }
