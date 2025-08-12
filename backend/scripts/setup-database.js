@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
 /**
- * Database Setup Script for Railway
- * This script will be executed by Railway to initialize the database
+ * Database Setup Script for Railway/Render
+ * This script reads SQL files from init-scripts and applies them idempotently.
  */
 
 const { Pool } = require('pg');
@@ -10,20 +10,27 @@ const fs = require('fs');
 const path = require('path');
 
 // Database connection configuration
-const pool = new Pool({
-  host: process.env.DB_HOST || 'localhost',
-  port: process.env.DB_PORT || 5432,
-  database: process.env.DB_NAME || 'health_tracker',
-  user: process.env.DB_USER || 'health_user',
-  password: process.env.DB_PASSWORD || 'health_password_2024',
-});
+const connectionOptions = process.env.DATABASE_URL
+  ? {
+      connectionString: process.env.DATABASE_URL,
+      ssl: { rejectUnauthorized: false },
+    }
+  : {
+      host: process.env.DB_HOST || 'localhost',
+      port: Number(process.env.DB_PORT) || 5432,
+      database: process.env.DB_NAME || 'health_tracker',
+      user: process.env.DB_USER || 'health_user',
+      password: process.env.DB_PASSWORD || 'health_password_2024',
+    };
+
+const pool = new Pool(connectionOptions);
 
 async function setupDatabase() {
   const client = await pool.connect();
   
   try {
     console.log('🚀 Starting database setup...');
-    
+
     // Read and execute initialization scripts
     const scriptsDir = path.join(__dirname, '../../init-scripts');
     const scriptFiles = [
