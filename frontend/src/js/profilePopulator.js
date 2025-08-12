@@ -62,11 +62,11 @@ export class ProfilePopulatorService {
 
             // Check if we have a UserActive set
             const userActive = localStorage.getItem('userActive');
-            let endpoint = 'http://localhost:3000/api/users/profile';
+            let endpoint = '/api/users/profile';
             
             if (userActive) {
                 // Use the specific user endpoint if we have a UserActive
-                endpoint = `http://localhost:3000/api/users/${userActive}/profile`;
+                endpoint = `/api/users/${userActive}/profile`;
                 console.log('Using UserActive endpoint for profile population:', endpoint);
             } else {
                 console.log('Using authenticated user endpoint for profile population:', endpoint);

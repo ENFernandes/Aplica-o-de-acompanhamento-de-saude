@@ -631,13 +631,13 @@ export class AuthManager {
             
             const token = localStorage.getItem('auth-token');
             // Only admins can fetch another user's profile by ID
-            let endpoint = 'http://localhost:3000/api/users/profile';
+            let endpoint = '/api/users/profile';
             try {
                 const payload = JSON.parse(atob(token.split('.')[1]));
                 const isAdmin = payload?.role === 'admin';
                 const isAnotherUser = String(userId) !== String(payload?.userId);
                 if (isAdmin && isAnotherUser) {
-                    endpoint = `http://localhost:3000/api/users/${userId}/profile`;
+                    endpoint = `/api/users/${userId}/profile`;
                 }
             } catch (_) {}
 

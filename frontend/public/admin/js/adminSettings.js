@@ -1,7 +1,7 @@
 // Admin Settings Service
 export class AdminSettingsService {
     constructor() {
-        this.baseUrl = 'http://localhost:3000';
+        this.baseUrl = '/api';
         this.settings = {
             systemName: 'Health Tracker',
             supportEmail: 'support@healthtracker.com',

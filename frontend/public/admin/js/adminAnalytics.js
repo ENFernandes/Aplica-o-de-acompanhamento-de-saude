@@ -1,7 +1,7 @@
 // Admin Analytics Service
 export class AdminAnalyticsService {
     constructor() {
-        this.baseUrl = 'http://localhost:3000';
+        this.baseUrl = '/api';
         this.charts = {};
     }
 

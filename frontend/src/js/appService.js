@@ -86,7 +86,7 @@ export class AppService {
 
             // Decide endpoint: only use /api/users/:id/health-records when admin is viewing another user
             const userActive = localStorage.getItem('userActive');
-            let endpoint = 'http://localhost:3000/api/health-records';
+            let endpoint = '/api/health-records';
             
             if (userActive) {
                 try {
@@ -94,7 +94,7 @@ export class AppService {
                     const isAdmin = payload?.role === 'admin';
                     const isViewingAnotherUser = userActive && userActive !== String(payload?.userId);
                     if (isAdmin && isViewingAnotherUser) {
-                        endpoint = `http://localhost:3000/api/users/${userActive}/health-records`;
+                        endpoint = `/api/users/${userActive}/health-records`;
                     }
                 } catch (_) {
                     // ignore payload parse errors; default endpoint is used
@@ -193,7 +193,7 @@ export class AppService {
                 return;
             }
 
-            const response = await fetch('http://localhost:3000/api/health-records', {
+            const response = await fetch('/api/health-records', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -261,7 +261,7 @@ export class AppService {
                 return;
             }
 
-            const response = await fetch(`http://localhost:3000/api/health-records/${docId}`, {
+            const response = await fetch(`/api/health-records/${docId}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -302,7 +302,7 @@ export class AppService {
                     return;
                 }
 
-                const response = await fetch(`http://localhost:3000/api/health-records/${docId}`, {
+                const response = await fetch(`/api/health-records/${docId}`, {
                     method: 'DELETE',
                     headers: {
                         'Authorization': `Bearer ${token}`

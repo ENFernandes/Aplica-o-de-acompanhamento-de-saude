@@ -1,7 +1,7 @@
 // Data Management Service
 export class DataManagementService {
     constructor() {
-        this.baseUrl = 'http://localhost:3000';
+        this.baseUrl = '/api';
         this.records = [];
         this.filters = {
             userId: '',

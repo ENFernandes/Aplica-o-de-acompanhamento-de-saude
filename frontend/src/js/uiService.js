@@ -122,7 +122,7 @@ export class UIService {
             
             // Decide endpoint: only use /api/users/:id/profile when admin is viewing another user
             const userActive = localStorage.getItem('userActive');
-            let endpoint = 'http://localhost:3000/api/users/profile';
+            let endpoint = '/api/users/profile';
             
             if (userActive) {
                 try {
@@ -130,7 +130,7 @@ export class UIService {
                     const isAdmin = payload?.role === 'admin';
                     const isAnotherUser = String(userActive) !== String(payload?.userId);
                     if (isAdmin && isAnotherUser) {
-                        endpoint = `http://localhost:3000/api/users/${userActive}/profile`;
+                        endpoint = `/api/users/${userActive}/profile`;
                     }
                 } catch (_) {
                     // ignore; default endpoint will be used

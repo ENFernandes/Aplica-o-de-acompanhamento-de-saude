@@ -1,7 +1,7 @@
 // Notifications disabled. Keep minimal stubs to avoid errors if referenced.
 export class AdminNotificationsService {
     constructor() {
-        this.baseUrl = 'http://localhost:3000';
+        this.baseUrl = '/api';
         this.notifications = [];
         this.unreadCount = 0;
     }

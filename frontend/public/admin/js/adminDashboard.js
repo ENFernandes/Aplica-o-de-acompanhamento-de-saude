@@ -1,7 +1,7 @@
 // Admin Dashboard Service
 export class AdminDashboardService {
     constructor() {
-        this.baseUrl = 'http://localhost:3000';
+        this.baseUrl = '/api';
         this.charts = {};
     }
 

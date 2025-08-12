@@ -1,7 +1,7 @@
 // User Management Service
 export class UserManagementService {
     constructor() {
-        this.baseUrl = 'http://localhost:3000';
+        this.baseUrl = '/api';
         this.users = [];
         this.filters = {
             search: '',

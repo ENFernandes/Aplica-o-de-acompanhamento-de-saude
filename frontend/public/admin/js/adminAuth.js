@@ -1,7 +1,7 @@
 // Admin Authentication Service
 export class AdminAuthService {
     constructor() {
-        this.baseUrl = 'http://localhost:3000';
+        this.baseUrl = '/api';
         this.currentAdmin = null;
         this.isAuthenticated = false;
     }

@@ -673,7 +673,7 @@ export class AuthManager {
             this.setUserActive(userId);
             
             const token = localStorage.getItem('auth-token');
-            const response = await fetch(`http://localhost:3000/api/users/${userId}/profile`, {
+            const response = await fetch(`/api/users/${userId}/profile`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${token}`,

@@ -19,7 +19,7 @@ const Index = () => {
     // Atualiza o link do WhatsApp com o número vindo da API
     (async () => {
       try {
-        const resp = await fetch('http://localhost:3000/api/public/settings', { credentials: 'omit' });
+        const resp = await fetch('/api/public/settings', { credentials: 'omit' });
         if (!resp.ok) return;
         const data = await resp.json();
         const phone = data?.settings?.whatsappNumber;

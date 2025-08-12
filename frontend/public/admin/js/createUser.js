@@ -1,7 +1,7 @@
 // Create User Management
 export class CreateUserService {
     constructor() {
-        this.baseUrl = 'http://localhost:3000';
+        this.baseUrl = '/api';
     }
 
     // Create new user
