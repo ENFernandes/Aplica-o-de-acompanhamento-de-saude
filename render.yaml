@@ -11,35 +11,45 @@ services:
   # Backend Web Service
   - type: web
     name: health-tracker-backend
-    env: node
+    env: docker
     plan: free
     region: frankfurt
-    buildCommand: npm ci
-    startCommand: npm start
     rootDir: backend
+    dockerfilePath: ./Dockerfile
     envVars:
       - key: NODE_ENV
         value: production
       - key: PORT
-        value: 10000
+        value: 3000
       - key: DATABASE_URL
-        fromDatabase:
+        from:
           name: health-tracker-db
           property: connectionString
       - key: JWT_SECRET
         generateValue: true
       - key: CORS_ORIGIN
-        value: https://health-tracker-frontend.onrender.com
-
+        from:
+          type: web
+          name: health-tracker-frontend
+          property: url
   # Frontend Static Site
-  - type: web
+  - type: static
     name: health-tracker-frontend
-    env: static
     plan: free
     region: frankfurt
-    buildCommand: npm ci && npm run build
+    buildCommand: npm install && npm run build
     staticPublishPath: ./dist
     rootDir: frontend
+    routes:
+      - type: rewrite
+        source: /api/*
+        destination: https://health-tracker-backend.onrender.com/api/*
+      - type: rewrite
+        source: /*
+        destination: /index.html
     envVars:
       - key: VITE_API_URL
-        value: https://health-tracker-backend.onrender.com
+        from:
+          type: web
+          name: health-tracker-backend
+          property: url
