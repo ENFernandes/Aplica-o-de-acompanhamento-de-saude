@@ -25,6 +25,17 @@ const connectionOptions = process.env.DATABASE_URL
 
 const pool = new Pool(connectionOptions);
 
+function resolveScriptsDir() {
+  const candidates = [
+    path.join(__dirname, '../init-scripts'), // preferred (inside backend)
+    path.join(__dirname, '../../init-scripts'), // legacy location at repo root
+  ];
+  for (const dir of candidates) {
+    if (fs.existsSync(dir)) return dir;
+  }
+  return candidates[0];
+}
+
 async function setupDatabase() {
   const client = await pool.connect();
   
@@ -32,7 +43,7 @@ async function setupDatabase() {
     console.log('🚀 Starting database setup...');
 
     // Read and execute initialization scripts
-    const scriptsDir = path.join(__dirname, '../../init-scripts');
+    const scriptsDir = resolveScriptsDir();
     const scriptFiles = [
       '01-init-database.sql',
       '02-update-database.sql',
@@ -69,7 +80,7 @@ async function setupDatabase() {
         
         console.log(`✅ ${scriptFile} completed`);
       } else {
-        console.log(`⚠️  Script not found: ${scriptFile}`);
+        console.log(`⚠️  Script not found: ${scriptFile} (looked in ${scriptsDir})`);
       }
     }
     
