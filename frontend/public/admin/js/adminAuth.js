@@ -14,7 +14,7 @@ export class AdminAuthService {
                 return { isAdmin: false, admin: null };
             }
 
-            const response = await fetch(`${this.baseUrl}/api/admin/check`, {
+            const response = await fetch(`${this.baseUrl}/admin/check`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -271,7 +271,7 @@ export class AdminAuthManager {
         
         try {
             const token = localStorage.getItem('auth-token');
-            const response = await fetch(`${this.authService.baseUrl}/api/users/profile`, {
+            const response = await fetch(`${this.authService.baseUrl}/users/profile`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
