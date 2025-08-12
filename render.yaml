@@ -1,8 +1,7 @@
 services:
   # PostgreSQL Database
-  - type: pserv
+  - type: db
     name: health-tracker-db
-    env: postgresql
     plan: free
     region: frankfurt
     databaseName: health_tracker
@@ -23,17 +22,19 @@ services:
         value: 3000
       - key: DATABASE_URL
         from:
+          type: db
           name: health-tracker-db
           property: connectionString
       - key: JWT_SECRET
         generateValue: true
       - key: CORS_ORIGIN
         from:
-          type: web
+          type: static_site
           name: health-tracker-frontend
           property: url
+
   # Frontend Static Site
-  - type: static
+  - type: static_site
     name: health-tracker-frontend
     plan: free
     region: frankfurt
@@ -41,9 +42,6 @@ services:
     staticPublishPath: ./dist
     rootDir: frontend
     routes:
-      - type: rewrite
-        source: /api/*
-        destination: https://health-tracker-backend.onrender.com/api/*
       - type: rewrite
         source: /*
         destination: /index.html
