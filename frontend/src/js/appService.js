@@ -222,7 +222,7 @@ export class AppService {
                 return;
             }
 
-            const response = await fetch('/api/health-records', {
+            let response = await fetch('/api/health-records', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -232,15 +232,8 @@ export class AppService {
             });
 
             if (!response.ok) {
-                const contentType = response.headers.get('content-type') || '';
+                // Read error body ONCE
                 let serverErr = { message: await AppService.extractErrorMessage(response) };
-                try {
-                    if (contentType.includes('application/json')) {
-                        const json = await response.clone().json();
-                        serverErr = json;
-                    }
-                } catch (_) {}
-
                 // If duplicate date, prompt user to confirm saving another record for same date
                 if (response.status === 409 && (serverErr.code === 'DUPLICATE_DATE' || /already exists/i.test(serverErr.message))) {
                     const proceed = confirm('Já existe um registo para esta data. Deseja criar mais um registo para o mesmo dia?');
@@ -258,6 +251,8 @@ export class AppService {
                             const retryMsg = await AppService.extractErrorMessage(retryRes);
                             throw new Error(retryMsg);
                         }
+                        // use retry response for subsequent flow
+                        response = retryRes;
                     } else {
                         throw new Error(serverErr.message || 'Operação cancelada.');
                     }
