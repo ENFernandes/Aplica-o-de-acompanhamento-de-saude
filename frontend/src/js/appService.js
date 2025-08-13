@@ -178,6 +178,20 @@ export class AppService {
             }
         });
 
+        // If admin is viewing another user, set explicit target user_id
+        try {
+            const token = localStorage.getItem('auth-token');
+            if (token) {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                const userActive = localStorage.getItem('userActive');
+                const isAdmin = payload?.role === 'admin';
+                const isViewingAnotherUser = userActive && userActive !== String(payload?.userId);
+                if (isAdmin && isViewingAnotherUser) {
+                    data.user_id = userActive;
+                }
+            }
+        } catch (_) {}
+
         // Validate form data
         const validationErrors = ValidationService.validateFormData(data);
         if (validationErrors.length > 0) {
