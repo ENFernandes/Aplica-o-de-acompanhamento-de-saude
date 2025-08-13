@@ -31,124 +31,124 @@ const healthRecordSchema = Joi.object({
     date: Joi.date().required().messages({
         'any.required': 'Date is required'
     }),
-    weight: Joi.number().min(20).max(300).optional().messages({
+    weight: Joi.number().min(20).max(300).optional().allow(null).messages({
         'number.min': 'Weight must be at least 20 kg',
         'number.max': 'Weight cannot exceed 300 kg'
     }),
-    height: Joi.number().integer().min(100).max(250).optional().messages({
+    height: Joi.number().integer().min(100).max(250).optional().allow(null).messages({
         'number.integer': 'Height must be a whole number',
         'number.min': 'Height must be at least 100 cm',
         'number.max': 'Height cannot exceed 250 cm'
     }),
-    age: Joi.number().integer().min(1).max(150).optional().messages({
+    age: Joi.number().integer().min(1).max(150).optional().allow(null).messages({
         'number.integer': 'Age must be a whole number',
         'number.min': 'Age must be at least 1',
         'number.max': 'Age cannot exceed 150'
     }),
     // Support both snake_case and camelCase field names
-    body_fat_percentage: Joi.number().min(1).max(50).optional().messages({
+    body_fat_percentage: Joi.number().min(1).max(50).optional().allow(null).messages({
         'number.min': 'Body fat percentage must be at least 1%',
         'number.max': 'Body fat percentage cannot exceed 50%'
     }),
-    bodyFatPercentage: Joi.number().min(1).max(50).optional().messages({
+    bodyFatPercentage: Joi.number().min(1).max(50).optional().allow(null).messages({
         'number.min': 'Body fat percentage must be at least 1%',
         'number.max': 'Body fat percentage cannot exceed 50%'
     }),
 
-    muscle_mass: Joi.number().min(0).max(100).optional().messages({
+    muscle_mass: Joi.number().min(0).max(100).optional().allow(null).messages({
         'number.min': 'Muscle mass cannot be negative',
         'number.max': 'Muscle mass cannot exceed 100 kg'
     }),
-    muscleMass: Joi.number().min(0).max(100).optional().messages({
+    muscleMass: Joi.number().min(0).max(100).optional().allow(null).messages({
         'number.min': 'Muscle mass cannot be negative',
         'number.max': 'Muscle mass cannot exceed 100 kg'
     }),
-    bone_mass: Joi.number().min(0).max(10).optional().messages({
+    bone_mass: Joi.number().min(0).max(10).optional().allow(null).messages({
         'number.min': 'Bone mass cannot be negative',
         'number.max': 'Bone mass cannot exceed 10 kg'
     }),
-    boneMass: Joi.number().min(0).max(10).optional().messages({
+    boneMass: Joi.number().min(0).max(10).optional().allow(null).messages({
         'number.min': 'Bone mass cannot be negative',
         'number.max': 'Bone mass cannot exceed 10 kg'
     }),
-    bmi: Joi.number().min(10).max(60).optional().messages({
+    bmi: Joi.number().min(10).max(60).optional().allow(null).messages({
         'number.min': 'BMI must be at least 10',
         'number.max': 'BMI cannot exceed 60'
     }),
-    kcal: Joi.number().integer().min(500).max(10000).optional().messages({
+    kcal: Joi.number().integer().min(500).max(10000).optional().allow(null).messages({
         'number.integer': 'Calories must be a whole number',
         'number.min': 'Calories must be at least 500',
         'number.max': 'Calories cannot exceed 10000'
     }),
-    metabolic_age: Joi.number().integer().min(10).max(100).optional().messages({
+    metabolic_age: Joi.number().integer().min(10).max(100).optional().allow(null).messages({
         'number.integer': 'Metabolic age must be a whole number',
         'number.min': 'Metabolic age must be at least 10',
         'number.max': 'Metabolic age cannot exceed 100'
     }),
-    metabolicAge: Joi.number().integer().min(10).max(100).optional().messages({
+    metabolicAge: Joi.number().integer().min(10).max(100).optional().allow(null).messages({
         'number.integer': 'Metabolic age must be a whole number',
         'number.min': 'Metabolic age must be at least 10',
         'number.max': 'Metabolic age cannot exceed 100'
     }),
-    water_percentage: Joi.number().min(30).max(80).optional().messages({
+    water_percentage: Joi.number().min(30).max(80).optional().allow(null).messages({
         'number.min': 'Water percentage must be at least 30%',
         'number.max': 'Water percentage cannot exceed 80%'
     }),
-    waterPercentage: Joi.number().min(30).max(80).optional().messages({
+    waterPercentage: Joi.number().min(30).max(80).optional().allow(null).messages({
         'number.min': 'Water percentage must be at least 30%',
         'number.max': 'Water percentage cannot exceed 80%'
     }),
-    visceral_fat: Joi.number().integer().min(1).max(30).optional().messages({
+    visceral_fat: Joi.number().integer().min(1).max(30).optional().allow(null).messages({
         'number.integer': 'Visceral fat must be a whole number',
         'number.min': 'Visceral fat must be at least 1',
         'number.max': 'Visceral fat cannot exceed 30'
     }),
-    visceralFat: Joi.number().integer().min(1).max(30).optional().messages({
+    visceralFat: Joi.number().integer().min(1).max(30).optional().allow(null).messages({
         'number.integer': 'Visceral fat must be a whole number',
         'number.min': 'Visceral fat must be at least 1',
         'number.max': 'Visceral fat cannot exceed 30'
     }),
-    fat_right_arm: Joi.number().min(0).max(50).optional().messages({
+    fat_right_arm: Joi.number().min(0).max(50).optional().allow(null).messages({
         'number.min': 'Right arm fat cannot be negative',
         'number.max': 'Right arm fat cannot exceed 50%'
     }),
-    fatRightArm: Joi.number().min(0).max(50).optional().messages({
+    fatRightArm: Joi.number().min(0).max(50).optional().allow(null).messages({
         'number.min': 'Right arm fat cannot be negative',
         'number.max': 'Right arm fat cannot exceed 50%'
     }),
-    fat_left_arm: Joi.number().min(0).max(50).optional().messages({
+    fat_left_arm: Joi.number().min(0).max(50).optional().allow(null).messages({
         'number.min': 'Left arm fat cannot be negative',
         'number.max': 'Left arm fat cannot exceed 50%'
     }),
-    fatLeftArm: Joi.number().min(0).max(50).optional().messages({
+    fatLeftArm: Joi.number().min(0).max(50).optional().allow(null).messages({
         'number.min': 'Left arm fat cannot be negative',
         'number.max': 'Left arm fat cannot exceed 50%'
     }),
-    fat_right_leg: Joi.number().min(0).max(50).optional().messages({
+    fat_right_leg: Joi.number().min(0).max(50).optional().allow(null).messages({
         'number.min': 'Right leg fat cannot be negative',
         'number.max': 'Right leg fat cannot exceed 50%'
     }),
-    fatRightLeg: Joi.number().min(0).max(50).optional().messages({
+    fatRightLeg: Joi.number().min(0).max(50).optional().allow(null).messages({
         'number.min': 'Right leg fat cannot be negative',
         'number.max': 'Right leg fat cannot exceed 50%'
     }),
-    fat_left_leg: Joi.number().min(0).max(50).optional().messages({
+    fat_left_leg: Joi.number().min(0).max(50).optional().allow(null).messages({
         'number.min': 'Left leg fat cannot be negative',
         'number.max': 'Left leg fat cannot exceed 50%'
     }),
-    fatLeftLeg: Joi.number().min(0).max(50).optional().messages({
+    fatLeftLeg: Joi.number().min(0).max(50).optional().allow(null).messages({
         'number.min': 'Left leg fat cannot be negative',
         'number.max': 'Left leg fat cannot exceed 50%'
     }),
-    fat_trunk: Joi.number().min(0).max(50).optional().messages({
+    fat_trunk: Joi.number().min(0).max(50).optional().allow(null).messages({
         'number.min': 'Trunk fat cannot be negative',
         'number.max': 'Trunk fat cannot exceed 50%'
     }),
-    fatTrunk: Joi.number().min(0).max(50).optional().messages({
+    fatTrunk: Joi.number().min(0).max(50).optional().allow(null).messages({
         'number.min': 'Trunk fat cannot be negative',
         'number.max': 'Trunk fat cannot exceed 50%'
     }),
-    notes: Joi.string().optional()
+    notes: Joi.string().allow('', null).optional()
 });
 
 const profileUpdateSchema = Joi.object({
