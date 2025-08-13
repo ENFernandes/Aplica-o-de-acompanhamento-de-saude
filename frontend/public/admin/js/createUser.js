@@ -8,7 +8,7 @@ export class CreateUserService {
     async createUser(userData) {
         try {
             const token = localStorage.getItem('auth-token');
-            const response = await fetch(`${this.baseUrl}/api/admin/users`, {
+            const response = await fetch(`${this.baseUrl}/admin/users`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,

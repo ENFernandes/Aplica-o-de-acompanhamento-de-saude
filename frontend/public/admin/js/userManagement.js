@@ -14,7 +14,7 @@ export class UserManagementService {
     async loadUsers() {
         try {
             const token = localStorage.getItem('auth-token');
-            const response = await fetch(`${this.baseUrl}/api/admin/users`, {
+            const response = await fetch(`${this.baseUrl}/admin/users`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -207,7 +207,7 @@ export class UserManagementService {
 
         try {
             const token = localStorage.getItem('auth-token');
-            const response = await fetch(`${this.baseUrl}/api/admin/users/${userId}/promote`, {
+            const response = await fetch(`${this.baseUrl}/admin/users/${userId}/promote`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -244,7 +244,7 @@ export class UserManagementService {
 
         try {
             const token = localStorage.getItem('auth-token');
-            const response = await fetch(`${this.baseUrl}/api/admin/users/${userId}`, {
+            const response = await fetch(`${this.baseUrl}/admin/users/${userId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -297,7 +297,7 @@ export class UserManagementService {
             const token = localStorage.getItem('auth-token');
             // prepare request
             
-            const response = await fetch(`${this.baseUrl}/api/admin/users/${userId}/reset-password`, {
+            const response = await fetch(`${this.baseUrl}/admin/users/${userId}/reset-password`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,

@@ -15,7 +15,7 @@ export class DataManagementService {
     async loadRecords() {
         try {
             const token = localStorage.getItem('auth-token');
-            const response = await fetch(`${this.baseUrl}/api/admin/health-records`, {
+            const response = await fetch(`${this.baseUrl}/admin/health-records`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -175,7 +175,7 @@ export class DataManagementService {
 
         try {
             const token = localStorage.getItem('auth-token');
-            const response = await fetch(`${this.baseUrl}/api/admin/health-records/${recordId}`, {
+            const response = await fetch(`${this.baseUrl}/admin/health-records/${recordId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -335,7 +335,7 @@ export class DataManagementService {
     async updateRecord(recordId, recordData) {
         try {
             const token = localStorage.getItem('auth-token');
-            const response = await fetch(`${this.baseUrl}/api/admin/health-records/${recordId}`, {
+            const response = await fetch(`${this.baseUrl}/admin/health-records/${recordId}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',

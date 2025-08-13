@@ -9,7 +9,7 @@ export class AdminAnalyticsService {
     async loadAnalyticsData() {
         try {
             const token = localStorage.getItem('auth-token');
-            const response = await fetch(`${this.baseUrl}/api/admin/analytics`, {
+            const response = await fetch(`${this.baseUrl}/admin/analytics`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${token}`

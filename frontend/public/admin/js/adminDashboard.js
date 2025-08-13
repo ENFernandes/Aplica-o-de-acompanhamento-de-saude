@@ -9,7 +9,7 @@ export class AdminDashboardService {
     async loadDashboardData() {
         try {
             const token = localStorage.getItem('auth-token');
-            const response = await fetch(`${this.baseUrl}/api/admin/dashboard`, {
+            const response = await fetch(`${this.baseUrl}/admin/dashboard`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${token}`

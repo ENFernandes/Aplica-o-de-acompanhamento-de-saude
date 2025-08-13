@@ -17,7 +17,7 @@ export class AdminSettingsService {
     async loadSettings() {
         try {
             const token = localStorage.getItem('auth-token');
-            const response = await fetch(`${this.baseUrl}/api/admin/settings`, {
+            const response = await fetch(`${this.baseUrl}/admin/settings`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -45,7 +45,7 @@ export class AdminSettingsService {
     async saveSettings(settings) {
         try {
             const token = localStorage.getItem('auth-token');
-            const response = await fetch(`${this.baseUrl}/api/admin/settings`, {
+            const response = await fetch(`${this.baseUrl}/admin/settings`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',

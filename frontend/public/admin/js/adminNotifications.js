@@ -10,7 +10,7 @@ export class AdminNotificationsService {
     async loadNotifications() {
         try {
             const token = localStorage.getItem('auth-token');
-            const response = await fetch(`${this.baseUrl}/api/admin/notifications`, {
+            const response = await fetch(`${this.baseUrl}/admin/notifications`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -157,7 +157,7 @@ export class AdminNotificationsService {
     async markAsRead(notificationId) {
         try {
             const token = localStorage.getItem('auth-token');
-            const response = await fetch(`${this.baseUrl}/api/admin/notifications/${notificationId}/read`, {
+            const response = await fetch(`${this.baseUrl}/admin/notifications/${notificationId}/read`, {
                 method: 'PUT',
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -193,7 +193,7 @@ export class AdminNotificationsService {
     async markAllAsRead() {
         try {
             const token = localStorage.getItem('auth-token');
-            const response = await fetch(`${this.baseUrl}/api/admin/notifications/read-all`, {
+            const response = await fetch(`${this.baseUrl}/admin/notifications/read-all`, {
                 method: 'PUT',
                 headers: {
                     'Authorization': `Bearer ${token}`
