@@ -31,6 +31,9 @@ const healthRecordSchema = Joi.object({
     // Optional explicit target user when admin is creating records for another user
     user_id: Joi.string().guid({ version: 'uuidv4' }).optional().allow(null),
     userId: Joi.string().guid({ version: 'uuidv4' }).optional().allow(null),
+    // Optional flag to allow saving multiple records for the same date
+    allowDuplicate: Joi.boolean().optional(),
+    allow_duplicate: Joi.boolean().optional(),
     date: Joi.date().required().messages({
         'any.required': 'Date is required'
     }),

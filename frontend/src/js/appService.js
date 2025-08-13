@@ -232,8 +232,38 @@ export class AppService {
             });
 
             if (!response.ok) {
-                const msg = await AppService.extractErrorMessage(response);
-                throw new Error(msg);
+                const contentType = response.headers.get('content-type') || '';
+                let serverErr = { message: await AppService.extractErrorMessage(response) };
+                try {
+                    if (contentType.includes('application/json')) {
+                        const json = await response.clone().json();
+                        serverErr = json;
+                    }
+                } catch (_) {}
+
+                // If duplicate date, prompt user to confirm saving another record for same date
+                if (response.status === 409 && (serverErr.code === 'DUPLICATE_DATE' || /already exists/i.test(serverErr.message))) {
+                    const proceed = confirm('Já existe um registo para esta data. Deseja criar mais um registo para o mesmo dia?');
+                    if (proceed) {
+                        // retry with allowDuplicate flag
+                        const retryRes = await fetch('/api/health-records', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}`
+                            },
+                            body: JSON.stringify({ ...data, allowDuplicate: true })
+                        });
+                        if (!retryRes.ok) {
+                            const retryMsg = await AppService.extractErrorMessage(retryRes);
+                            throw new Error(retryMsg);
+                        }
+                    } else {
+                        throw new Error(serverErr.message || 'Operação cancelada.');
+                    }
+                } else {
+                    throw new Error(serverErr.message || 'Erro ao guardar no servidor');
+                }
             }
 
             await response.json();

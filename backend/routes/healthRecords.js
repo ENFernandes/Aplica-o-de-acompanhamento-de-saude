@@ -147,9 +147,11 @@ router.post('/', authenticateToken, validateHealthRecord, convertCamelToSnake, a
             [targetUserId, date]
         );
 
-        if (existingRecord.rows.length > 0) {
+        const allowDuplicate = req.body.allowDuplicate === true || req.body.allow_duplicate === true;
+        if (existingRecord.rows.length > 0 && !allowDuplicate) {
             return res.status(409).json({
-                error: 'A health record for this date already exists'
+                error: 'A health record for this date already exists',
+                code: 'DUPLICATE_DATE'
             });
         }
 
