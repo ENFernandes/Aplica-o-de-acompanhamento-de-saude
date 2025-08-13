@@ -9,6 +9,12 @@ const { Pool } = require('pg');
 const fs = require('fs');
 const path = require('path');
 
+// Early exit if SKIP_DB_SETUP is set
+if (process.env.SKIP_DB_SETUP === 'true') {
+  console.log('🔕 SKIP_DB_SETUP=true — skipping database setup');
+  process.exit(0);
+}
+
 // Database connection configuration
 const connectionOptions = process.env.DATABASE_URL
   ? {
