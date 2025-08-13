@@ -28,6 +28,9 @@ const loginSchema = Joi.object({
 });
 
 const healthRecordSchema = Joi.object({
+    // Optional explicit target user when admin is creating records for another user
+    user_id: Joi.string().guid({ version: 'uuidv4' }).optional().allow(null),
+    userId: Joi.string().guid({ version: 'uuidv4' }).optional().allow(null),
     date: Joi.date().required().messages({
         'any.required': 'Date is required'
     }),
