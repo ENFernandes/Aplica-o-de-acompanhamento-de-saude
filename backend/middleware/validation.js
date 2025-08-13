@@ -229,10 +229,12 @@ function validateHealthRecord(req, res, next) {
     const { error } = healthRecordSchema.validate(normalizedBody);
     
     if (error) {
-        // Validation error
+        // Bubble up detailed path and context to help the frontend show precise errors
         return res.status(400).json({
             error: 'Validation Error',
-            message: error.details[0].message
+            message: error.details?.[0]?.message || 'Invalid payload',
+            path: error.details?.[0]?.path || null,
+            type: error.details?.[0]?.type || null
         });
     }
     

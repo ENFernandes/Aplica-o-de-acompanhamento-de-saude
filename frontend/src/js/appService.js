@@ -24,6 +24,21 @@ export class AppService {
         this.handleFormSubmit = this.handleFormSubmit.bind(this);
     }
 
+    // Extract readable error message from a failed fetch Response
+    static async extractErrorMessage(response) {
+        try {
+            const contentType = response.headers.get('content-type') || '';
+            if (contentType.includes('application/json')) {
+                const data = await response.json();
+                return data.message || data.error || JSON.stringify(data);
+            }
+            const text = await response.text();
+            return text || response.statusText || 'Unknown error';
+        } catch (_) {
+            return response.statusText || 'Unknown error';
+        }
+    }
+
     async initialize() {
         try {
             // Check if user is authenticated by checking token
@@ -217,8 +232,8 @@ export class AppService {
             });
 
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Erro ao guardar no servidor');
+                const msg = await AppService.extractErrorMessage(response);
+                throw new Error(msg);
             }
 
             await response.json();
@@ -285,8 +300,8 @@ export class AppService {
             });
 
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Erro ao atualizar no servidor');
+                const msg = await AppService.extractErrorMessage(response);
+                throw new Error(msg);
             }
 
             await response.json();
@@ -324,8 +339,8 @@ export class AppService {
                 });
 
                 if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || 'Erro ao eliminar no servidor');
+                    const msg = await AppService.extractErrorMessage(response);
+                    throw new Error(msg);
                 }
                 
                 this.uiService.showToast("Registo eliminado.", false);
